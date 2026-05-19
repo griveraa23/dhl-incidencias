@@ -1,5 +1,420 @@
 <!DOCTYPE html>
-                </h3>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>DHL Incidencias</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+:root{
+    --dhl-red:#D40511;
+    --dhl-yellow:#FFCC00;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:#f5f5f5;
+}
+
+header{
+    background:var(--dhl-yellow);
+    padding:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+header h1{
+    color:var(--dhl-red);
+}
+
+.datetime{
+    font-weight:bold;
+}
+
+.container{
+    max-width:1400px;
+    margin:auto;
+    padding:20px;
+}
+
+.top-buttons{
+    display:flex;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.top-buttons button{
+    flex:1;
+    padding:15px;
+    border:none;
+    border-radius:15px;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+    background:white;
+}
+
+.top-buttons button.active{
+    background:var(--dhl-red);
+    color:white;
+}
+
+.page{
+    display:none;
+}
+
+.page.active{
+    display:block;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 3px 10px rgba(0,0,0,.1);
+    margin-bottom:20px;
+}
+
+.kpis{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+}
+
+.kpi{
+    background:white;
+    padding:20px;
+    border-radius:20px;
+    border-left:8px solid var(--dhl-red);
+}
+
+.kpi h3{
+    margin-bottom:10px;
+}
+
+.kpi-number{
+    font-size:40px;
+    font-weight:bold;
+    color:var(--dhl-red);
+}
+
+.filters{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+}
+
+.filters select,
+input{
+    width:100%;
+    padding:12px;
+    border-radius:12px;
+    border:1px solid #ccc;
+}
+
+.selector-group{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+    margin:20px 0;
+}
+
+.selector{
+    flex:1;
+    min-width:180px;
+    padding:18px;
+    text-align:center;
+    border-radius:15px;
+    border:2px solid #ccc;
+    cursor:pointer;
+    background:white;
+    font-weight:bold;
+}
+
+.selector.active{
+    background:var(--dhl-red);
+    color:white;
+    border-color:var(--dhl-red);
+}
+
+.incidents{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+}
+
+.incident-card{
+    background:#fafafa;
+    padding:20px;
+    border-radius:18px;
+}
+
+.counter{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:15px;
+    margin-top:15px;
+}
+
+.counter button{
+    width:45px;
+    height:45px;
+    border:none;
+    border-radius:50%;
+    font-size:22px;
+    cursor:pointer;
+}
+
+.plus{
+    background:var(--dhl-yellow);
+}
+
+.minus{
+    background:#ffd6d6;
+    color:var(--dhl-red);
+}
+
+.count{
+    font-size:28px;
+    font-weight:bold;
+}
+
+.summary-item{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:10px;
+    padding-bottom:10px;
+    border-bottom:1px solid #eee;
+}
+
+.submit-btn{
+    width:100%;
+    padding:18px;
+    border:none;
+    border-radius:15px;
+    background:var(--dhl-red);
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:20px;
+}
+
+.report-layout{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:20px;
+}
+
+.history-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.history-table th,
+.history-table td{
+    padding:12px;
+    border-bottom:1px solid #eee;
+}
+
+.toast{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:var(--dhl-red);
+    color:white;
+    padding:15px 25px;
+    border-radius:12px;
+    display:none;
+}
+
+@media(max-width:900px){
+
+    .report-layout{
+        grid-template-columns:1fr;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>📦 DHL Sistema de Incidencias</h1>
+
+    <div class="datetime">
+        <div id="date"></div>
+        <div id="time"></div>
+    </div>
+
+</header>
+
+<div class="container">
+
+    <div class="top-buttons">
+
+        <button id="dashboardBtn" class="active">
+            📊 Dashboard
+        </button>
+
+        <button id="reportBtn">
+            📝 Reportar
+        </button>
+
+    </div>
+
+    <!-- DASHBOARD -->
+
+    <div id="dashboardPage" class="page active">
+
+        <div class="card">
+
+            <div class="filters">
+
+                <div>
+
+                    <label>Nave</label>
+
+                    <select id="warehouseFilter">
+
+                        <option value="all">Todas</option>
+                        <option value="Almacen">Almacen</option>
+                        <option value="Nave4">Nave4</option>
+                        <option value="Nave84">Nave84</option>
+
+                    </select>
+
+                </div>
+
+                <div>
+
+                    <label>Turno</label>
+
+                    <select id="shiftFilter">
+
+                        <option value="all">Todos</option>
+                        <option value="Primero">Primero</option>
+                        <option value="Segundo">Segundo</option>
+                        <option value="Tercero">Tercero</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="kpis">
+
+            <div class="kpi">
+                <h3>Total</h3>
+                <div class="kpi-number" id="kpiTotal">0</div>
+            </div>
+
+            <div class="kpi">
+                <h3>Faltas</h3>
+                <div class="kpi-number" id="kpiFalta">0</div>
+            </div>
+
+            <div class="kpi">
+                <h3>Incapacidades</h3>
+                <div class="kpi-number" id="kpiIncapacidad">0</div>
+            </div>
+
+            <div class="kpi">
+                <h3>Tiempo Extra</h3>
+                <div class="kpi-number" id="kpiTE">0</div>
+            </div>
+
+        </div>
+
+        <div class="card">
+
+            <h2>📈 Incidencias</h2>
+
+            <canvas id="lineChart"></canvas>
+
+        </div>
+
+        <div class="card">
+
+            <h2>🏭 Incidencias por Nave</h2>
+
+            <canvas id="barChart"></canvas>
+
+        </div>
+
+    </div>
+
+    <!-- REPORTE -->
+
+    <div id="reportPage" class="page">
+
+        <div class="report-layout">
+
+            <div class="card">
+
+                <h2>📝 Captura</h2>
+
+                <br>
+
+                <label>Usuario</label>
+
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="Ejemplo: Memo"
+                >
+
+                <br><br>
+
+                <h3>Selecciona Nave</h3>
+
+                <div class="selector-group">
+
+                    <div
+                        class="selector"
+                        onclick="selectWarehouse(this,'Almacen')"
+                    >
+                        📦 Almacen
+                    </div>
+
+                    <div
+                        class="selector"
+                        onclick="selectWarehouse(this,'Nave4')"
+                    >
+                        🏭 Nave4
+                    </div>
+
+                    <div
+                        class="selector"
+                        onclick="selectWarehouse(this,'Nave84')"
+                    >
+                        🚛 Nave84
+                    </div>
+
+                </div>
+
+                <h3>Selecciona Turno</h3>
 
                 <div class="selector-group">
 
@@ -30,11 +445,11 @@
 
             </div>
 
-            <div class="panel">
+            <div class="card">
 
-                <h2 style="margin-bottom:20px;">
-                    🛒 Resumen
-                </h2>
+                <h2>🛒 Resumen</h2>
+
+                <br>
 
                 <div id="summary"></div>
 
@@ -49,11 +464,11 @@
 
         </div>
 
-        <div class="panel" style="margin-top:25px;">
+        <div class="card">
 
-            <h2 style="margin-bottom:20px;">
-                📚 Historial
-            </h2>
+            <h2>📚 Historial</h2>
+
+            <br>
 
             <table class="history-table">
 
@@ -76,4 +491,571 @@
 
             </table>
 
-        <
+        </div>
+
+    </div>
+
+</div>
+
+<div class="toast" id="toast">
+    Reporte enviado correctamente
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyBpiI6tgL25Ssrt57n_9rxZJoTa9y0KC5g",
+  authDomain: "dhl-incidencias.firebaseapp.com",
+  projectId: "dhl-incidencias",
+  storageBucket: "dhl-incidencias.firebasestorage.app",
+  messagingSenderId: "592376274380",
+  appId: "1:592376274380:web:dee72b1b5c8fe5a6141169",
+  measurementId: "G-L8WWCG2QMZ"
+
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const incidents = [
+    "Falta",
+    "Permiso sin gose",
+    "Permiso con gose",
+    "Incapacidad",
+    "Tiempo extra"
+];
+
+const counts = {};
+
+incidents.forEach(i=>{
+    counts[i]=0;
+});
+
+let selectedWarehouse="";
+let selectedShift="";
+
+const dashboardBtn=document.getElementById("dashboardBtn");
+const reportBtn=document.getElementById("reportBtn");
+
+const dashboardPage=document.getElementById("dashboardPage");
+const reportPage=document.getElementById("reportPage");
+
+dashboardBtn.onclick=()=>{
+
+    dashboardBtn.classList.add("active");
+    reportBtn.classList.remove("active");
+
+    dashboardPage.classList.add("active");
+    reportPage.classList.remove("active");
+
+};
+
+reportBtn.onclick=()=>{
+
+    reportBtn.classList.add("active");
+    dashboardBtn.classList.remove("active");
+
+    reportPage.classList.add("active");
+    dashboardPage.classList.remove("active");
+
+};
+
+function updateClock(){
+
+    const now=new Date();
+
+    document.getElementById("date")
+        .innerText=now.toLocaleDateString();
+
+    document.getElementById("time")
+        .innerText=now.toLocaleTimeString();
+
+}
+
+setInterval(updateClock,1000);
+
+updateClock();
+
+function selectWarehouse(element,name){
+
+    selectedWarehouse=name;
+
+    document
+        .querySelectorAll(".selector:not(.shift)")
+        .forEach(el=>el.classList.remove("active"));
+
+    element.classList.add("active");
+
+    updateSummary();
+
+}
+
+window.selectWarehouse=selectWarehouse;
+
+function selectShift(element,name){
+
+    selectedShift=name;
+
+    document
+        .querySelectorAll(".shift")
+        .forEach(el=>el.classList.remove("active"));
+
+    element.classList.add("active");
+
+    updateSummary();
+
+}
+
+window.selectShift=selectShift;
+
+const container=document.getElementById("incidentsContainer");
+
+incidents.forEach(type=>{
+
+    const card=document.createElement("div");
+
+    card.className="incident-card";
+
+    card.innerHTML=`
+
+        <div>${type}</div>
+
+        <div class="counter">
+
+            <button class="minus">-</button>
+
+            <div class="count" id="${type}">0</div>
+
+            <button class="plus">+</button>
+
+        </div>
+
+    `;
+
+    container.appendChild(card);
+
+    const minus=card.querySelector(".minus");
+    const plus=card.querySelector(".plus");
+
+    minus.onclick=()=>{
+
+        if(counts[type]>0){
+
+            counts[type]--;
+
+            document.getElementById(type)
+                .innerText=counts[type];
+
+            updateSummary();
+
+        }
+
+    };
+
+    plus.onclick=()=>{
+
+        counts[type]++;
+
+        document.getElementById(type)
+            .innerText=counts[type];
+
+        updateSummary();
+
+    };
+
+});
+
+function updateSummary(){
+
+    const summary=document.getElementById("summary");
+
+    let total=0;
+
+    let html=`
+
+        <div class="summary-item">
+            <strong>Nave</strong>
+            <span>${selectedWarehouse || "No seleccionada"}</span>
+        </div>
+
+        <div class="summary-item">
+            <strong>Turno</strong>
+            <span>${selectedShift || "No seleccionado"}</span>
+        </div>
+
+    `;
+
+    incidents.forEach(type=>{
+
+        total+=counts[type];
+
+        html+=`
+
+            <div class="summary-item">
+                <span>${type}</span>
+                <strong>${counts[type]}</strong>
+            </div>
+
+        `;
+
+    });
+
+    html+=`
+
+        <div class="summary-item">
+            <strong>Total</strong>
+            <strong>${total}</strong>
+        </div>
+
+    `;
+
+    summary.innerHTML=html;
+
+}
+
+updateSummary();
+
+async function submitReport(){
+
+    const username=document.getElementById("username").value;
+
+    if(username.trim()===""){
+
+        alert("Ingresa usuario");
+
+        return;
+
+    }
+
+    if(selectedWarehouse===""){
+
+        alert("Selecciona nave");
+
+        return;
+
+    }
+
+    if(selectedShift===""){
+
+        alert("Selecciona turno");
+
+        return;
+
+    }
+
+    const total=
+        Object.values(counts)
+            .reduce((a,b)=>a+b,0);
+
+    if(total===0){
+
+        alert("Agrega incidencias");
+
+        return;
+
+    }
+
+    const now=new Date();
+
+    const report={
+
+        username,
+        warehouse:selectedWarehouse,
+        shift:selectedShift,
+        incidents:{...counts},
+        total,
+
+        date:now.toLocaleDateString(),
+        time:now.toLocaleTimeString(),
+
+        timestamp:Date.now()
+
+    };
+
+    await addDoc(
+        collection(db,"reports"),
+        report
+    );
+
+    resetForm();
+
+    showToast();
+
+}
+
+window.submitReport=submitReport;
+
+function resetForm(){
+
+    incidents.forEach(type=>{
+
+        counts[type]=0;
+
+        document.getElementById(type)
+            .innerText=0;
+
+    });
+
+    selectedWarehouse="";
+    selectedShift="";
+
+    document.getElementById("username").value="";
+
+    document
+        .querySelectorAll(".selector")
+        .forEach(el=>el.classList.remove("active"));
+
+    updateSummary();
+
+}
+
+function showToast(){
+
+    const toast=document.getElementById("toast");
+
+    toast.style.display="block";
+
+    setTimeout(()=>{
+
+        toast.style.display="none";
+
+    },3000);
+
+}
+
+const lineChart=new Chart(
+
+    document.getElementById("lineChart"),
+
+    {
+
+        type:"bar",
+
+        data:{
+
+            labels:[
+                "Falta",
+                "PSG",
+                "PCG",
+                "Incapacidad",
+                "TE"
+            ],
+
+            datasets:[{
+
+                label:"Incidencias",
+
+                data:[0,0,0,0,0],
+
+                backgroundColor:"#D40511"
+
+            }]
+
+        }
+
+    }
+
+);
+
+const barChart=new Chart(
+
+    document.getElementById("barChart"),
+
+    {
+
+        type:"bar",
+
+        data:{
+
+            labels:[
+                "Almacen",
+                "Nave4",
+                "Nave84"
+            ],
+
+            datasets:[{
+
+                label:"Totales",
+
+                data:[0,0,0],
+
+                backgroundColor:"#FFCC00"
+
+            }]
+
+        }
+
+    }
+
+);
+
+function updateDashboard(reports=[]){
+
+    const warehouseFilter=
+        document.getElementById("warehouseFilter")
+            .value;
+
+    const shiftFilter=
+        document.getElementById("shiftFilter")
+            .value;
+
+    let filtered=reports;
+
+    if(warehouseFilter!=="all"){
+
+        filtered=filtered.filter(r=>
+            r.warehouse===warehouseFilter
+        );
+
+    }
+
+    if(shiftFilter!=="all"){
+
+        filtered=filtered.filter(r=>
+            r.shift===shiftFilter
+        );
+
+    }
+
+    let total=0;
+    let falta=0;
+    let incapacidad=0;
+    let te=0;
+
+    filtered.forEach(r=>{
+
+        total+=r.total;
+
+        falta+=r.incidents["Falta"] || 0;
+
+        incapacidad+=
+            r.incidents["Incapacidad"] || 0;
+
+        te+=
+            r.incidents["Tiempo extra"] || 0;
+
+    });
+
+    document.getElementById("kpiTotal")
+        .innerText=total;
+
+    document.getElementById("kpiFalta")
+        .innerText=falta;
+
+    document.getElementById("kpiIncapacidad")
+        .innerText=incapacidad;
+
+    document.getElementById("kpiTE")
+        .innerText=te;
+
+    lineChart.data.datasets[0].data=[
+
+        falta,
+
+        filtered.reduce((a,b)=>
+            a+(b.incidents["Permiso sin gose"] || 0),0),
+
+        filtered.reduce((a,b)=>
+            a+(b.incidents["Permiso con gose"] || 0),0),
+
+        incapacidad,
+
+        te
+
+    ];
+
+    lineChart.update();
+
+    const warehouses={
+        Almacen:0,
+        Nave4:0,
+        Nave84:0
+    };
+
+    filtered.forEach(r=>{
+
+        warehouses[r.warehouse]+=r.total;
+
+    });
+
+    barChart.data.datasets[0].data=[
+
+        warehouses.Almacen,
+        warehouses.Nave4,
+        warehouses.Nave84
+
+    ];
+
+    barChart.update();
+
+}
+
+function loadReports(){
+
+    const table=document.getElementById("historyTable");
+
+    onSnapshot(collection(db,"reports"),snapshot=>{
+
+        const reports=[];
+
+        table.innerHTML="";
+
+        snapshot.forEach(doc=>{
+
+            reports.push(doc.data());
+
+        });
+
+        reports.sort((a,b)=>
+            b.timestamp-a.timestamp
+        );
+
+        reports.forEach(r=>{
+
+            table.innerHTML+=`
+
+                <tr>
+
+                    <td>${r.date}</td>
+                    <td>${r.time}</td>
+                    <td>${r.username}</td>
+                    <td>${r.warehouse}</td>
+                    <td>${r.shift}</td>
+                    <td>${r.total}</td>
+
+                </tr>
+
+            `;
+
+        });
+
+        updateDashboard(reports);
+
+    });
+
+}
+
+document
+    .getElementById("warehouseFilter")
+    .addEventListener("change",loadReports);
+
+document
+    .getElementById("shiftFilter")
+    .addEventListener("change",loadReports);
+
+loadReports();
+
+</script>
+
+</body>
+</html>
