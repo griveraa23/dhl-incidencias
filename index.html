@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>DHL Incidencias</title>
+<title>DHL Workforce Analytics V3</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -14,6 +14,7 @@
 :root{
     --dhl-red:#D40511;
     --dhl-yellow:#FFCC00;
+    --bg:#f5f5f5;
 }
 
 *{
@@ -24,7 +25,8 @@
 }
 
 body{
-    background:#f5f5f5;
+    background:var(--bg);
+    color:#222;
 }
 
 header{
@@ -45,7 +47,7 @@ header h1{
 }
 
 .container{
-    max-width:1400px;
+    max-width:1600px;
     margin:auto;
     padding:20px;
 }
@@ -82,33 +84,10 @@ header h1{
 
 .card{
     background:white;
-    padding:20px;
     border-radius:20px;
+    padding:20px;
     box-shadow:0 3px 10px rgba(0,0,0,.1);
     margin-bottom:20px;
-}
-
-.kpis{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:20px;
-}
-
-.kpi{
-    background:white;
-    padding:20px;
-    border-radius:20px;
-    border-left:8px solid var(--dhl-red);
-}
-
-.kpi h3{
-    margin-bottom:10px;
-}
-
-.kpi-number{
-    font-size:40px;
-    font-weight:bold;
-    color:var(--dhl-red);
 }
 
 .filters{
@@ -117,7 +96,7 @@ header h1{
     gap:20px;
 }
 
-.filters select,
+select,
 input{
     width:100%;
     padding:12px;
@@ -125,57 +104,54 @@ input{
     border:1px solid #ccc;
 }
 
-.selector-group{
-    display:flex;
-    gap:15px;
-    flex-wrap:wrap;
-    margin:20px 0;
-}
-
-.selector{
-    flex:1;
-    min-width:180px;
-    padding:18px;
-    text-align:center;
-    border-radius:15px;
-    border:2px solid #ccc;
-    cursor:pointer;
-    background:white;
-    font-weight:bold;
-}
-
-.selector.active{
-    background:var(--dhl-red);
-    color:white;
-    border-color:var(--dhl-red);
-}
-
-.incidents{
+.kpis{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
     gap:20px;
+    margin-bottom:20px;
 }
 
-.incident-card{
-    background:#fafafa;
+.kpi{
+    background:white;
+    border-radius:20px;
     padding:20px;
+    border-left:8px solid var(--dhl-red);
+}
+
+.kpi-number{
+    font-size:38px;
+    color:var(--dhl-red);
+    font-weight:bold;
+}
+
+.record-card{
+    background:#fafafa;
     border-radius:18px;
+    padding:20px;
+    margin-top:20px;
+    border:2px solid #eee;
+}
+
+.record-grid{
+    display:grid;
+    grid-template-columns:2fr 2fr 1fr auto;
+    gap:15px;
+    align-items:end;
 }
 
 .counter{
     display:flex;
-    justify-content:center;
     align-items:center;
-    gap:15px;
-    margin-top:15px;
+    justify-content:center;
+    gap:10px;
 }
 
 .counter button{
-    width:45px;
-    height:45px;
+    width:40px;
+    height:40px;
     border:none;
     border-radius:50%;
-    font-size:22px;
+    font-size:20px;
     cursor:pointer;
 }
 
@@ -189,16 +165,29 @@ input{
 }
 
 .count{
-    font-size:28px;
+    font-size:24px;
     font-weight:bold;
+    min-width:30px;
+    text-align:center;
 }
 
-.summary-item{
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:10px;
-    padding-bottom:10px;
-    border-bottom:1px solid #eee;
+.add-btn{
+    background:var(--dhl-yellow);
+    border:none;
+    padding:14px;
+    border-radius:12px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:20px;
+}
+
+.delete-btn{
+    background:var(--dhl-red);
+    color:white;
+    border:none;
+    padding:10px 15px;
+    border-radius:10px;
+    cursor:pointer;
 }
 
 .submit-btn{
@@ -214,12 +203,6 @@ input{
     margin-top:20px;
 }
 
-.report-layout{
-    display:grid;
-    grid-template-columns:2fr 1fr;
-    gap:20px;
-}
-
 .history-table{
     width:100%;
     border-collapse:collapse;
@@ -229,6 +212,7 @@ input{
 .history-table td{
     padding:12px;
     border-bottom:1px solid #eee;
+    text-align:left;
 }
 
 .toast{
@@ -242,9 +226,16 @@ input{
     display:none;
 }
 
+.summary-box{
+    background:#fafafa;
+    padding:20px;
+    border-radius:15px;
+    margin-top:20px;
+}
+
 @media(max-width:900px){
 
-    .report-layout{
+    .record-grid{
         grid-template-columns:1fr;
     }
 
@@ -258,7 +249,7 @@ input{
 
 <header>
 
-    <h1>📦 DHL Sistema de Incidencias</h1>
+    <h1>📦 DHL Workforce Analytics V3</h1>
 
     <div class="datetime">
         <div id="date"></div>
@@ -290,33 +281,29 @@ input{
             <div class="filters">
 
                 <div>
-
                     <label>Nave</label>
-
-                    <select id="warehouseFilter">
-
-                        <option value="all">Todas</option>
-                        <option value="Almacen">Almacen</option>
-                        <option value="Nave4">Nave4</option>
-                        <option value="Nave84">Nave84</option>
-
-                    </select>
-
+                    <select id="warehouseFilter"></select>
                 </div>
 
                 <div>
-
                     <label>Turno</label>
-
                     <select id="shiftFilter">
-
                         <option value="all">Todos</option>
                         <option value="Primero">Primero</option>
                         <option value="Segundo">Segundo</option>
                         <option value="Tercero">Tercero</option>
-
                     </select>
+                </div>
 
+                <div>
+                    <label>Periodo</label>
+                    <select id="dateFilter">
+                        <option value="today">Hoy</option>
+                        <option value="yesterday">Ayer</option>
+                        <option value="week">Semana</option>
+                        <option value="month">Mes</option>
+                        <option value="3months">Últimos 3 Meses</option>
+                    </select>
                 </div>
 
             </div>
@@ -326,13 +313,13 @@ input{
         <div class="kpis">
 
             <div class="kpi">
-                <h3>Total</h3>
+                <h3>Total Incidencias</h3>
                 <div class="kpi-number" id="kpiTotal">0</div>
             </div>
 
             <div class="kpi">
-                <h3>Faltas</h3>
-                <div class="kpi-number" id="kpiFalta">0</div>
+                <h3>Vacaciones</h3>
+                <div class="kpi-number" id="kpiVacaciones">0</div>
             </div>
 
             <div class="kpi">
@@ -341,8 +328,8 @@ input{
             </div>
 
             <div class="kpi">
-                <h3>Tiempo Extra</h3>
-                <div class="kpi-number" id="kpiTE">0</div>
+                <h3>Vacantes</h3>
+                <div class="kpi-number" id="kpiVacante">0</div>
             </div>
 
         </div>
@@ -365,102 +352,58 @@ input{
 
     </div>
 
-    <!-- REPORTE -->
+    <!-- REPORTAR -->
 
     <div id="reportPage" class="page">
 
-        <div class="report-layout">
+        <div class="card">
 
-            <div class="card">
+            <h2>📝 Captura de Incidencias</h2>
 
-                <h2>📝 Captura</h2>
+            <br>
 
-                <br>
+            <label>Usuario</label>
 
-                <label>Usuario</label>
+            <input type="text" id="username" placeholder="Ejemplo: Memo">
 
-                <input
-                    type="text"
-                    id="username"
-                    placeholder="Ejemplo: Memo"
-                >
+            <br><br>
 
-                <br><br>
+            <label>Nave</label>
 
-                <h3>Selecciona Nave</h3>
+            <select id="warehouseSelect"></select>
 
-                <div class="selector-group">
+            <br><br>
 
-                    <div
-                        class="selector"
-                        onclick="selectWarehouse(this,'Almacen')"
-                    >
-                        📦 Almacen
-                    </div>
+            <label>Turno</label>
 
-                    <div
-                        class="selector"
-                        onclick="selectWarehouse(this,'Nave4')"
-                    >
-                        🏭 Nave4
-                    </div>
+            <select id="shiftSelect">
 
-                    <div
-                        class="selector"
-                        onclick="selectWarehouse(this,'Nave84')"
-                    >
-                        🚛 Nave84
-                    </div>
+                <option value="">Selecciona</option>
+                <option value="Primero">Primero</option>
+                <option value="Segundo">Segundo</option>
+                <option value="Tercero">Tercero</option>
 
-                </div>
+            </select>
 
-                <h3>Selecciona Turno</h3>
+            <div id="recordsContainer"></div>
 
-                <div class="selector-group">
+            <button class="add-btn" onclick="addRecord()">
+                ➕ Agregar otra incidencia
+            </button>
 
-                    <div
-                        class="selector shift"
-                        onclick="selectShift(this,'Primero')"
-                    >
-                        ☀️ Primero
-                    </div>
+            <div class="summary-box">
 
-                    <div
-                        class="selector shift"
-                        onclick="selectShift(this,'Segundo')"
-                    >
-                        🌤 Segundo
-                    </div>
-
-                    <div
-                        class="selector shift"
-                        onclick="selectShift(this,'Tercero')"
-                    >
-                        🌙 Tercero
-                    </div>
-
-                </div>
-
-                <div class="incidents" id="incidentsContainer"></div>
-
-            </div>
-
-            <div class="card">
-
-                <h2>🛒 Resumen</h2>
+                <h3>📋 Resumen</h3>
 
                 <br>
 
                 <div id="summary"></div>
 
-                <button
-                    class="submit-btn"
-                    onclick="submitReport()"
-                >
-                    🚀 Enviar Reporte
-                </button>
-
             </div>
+
+            <button class="submit-btn" onclick="submitReport()">
+                🚀 Enviar Reporte
+            </button>
 
         </div>
 
@@ -477,7 +420,6 @@ input{
                     <tr>
 
                         <th>Fecha</th>
-                        <th>Hora</th>
                         <th>Usuario</th>
                         <th>Nave</th>
                         <th>Turno</th>
@@ -527,28 +469,94 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const incidents = [
-    "Falta",
-    "Permiso sin gose",
-    "Permiso con gose",
-    "Incapacidad",
-    "Tiempo extra"
+const warehouses = [
+    "Nave 1",
+    "Nave 4",
+    "Nave 26",
+    "Nave 52",
+    "Nave 84",
+    "Nave 82",
+    "Nave 101",
+    "Nave 109",
+    "Forvia/HBPO",
+    "Mtto MHE",
+    "Falcon",
+    "Transportes"
 ];
 
-const counts = {};
+const positions = [
+    "Operario Flexible",
+    "Tractorista",
+    "Montacarguista",
+    "Gruista",
+    "Analista",
+    "Coordinador"
+];
 
-incidents.forEach(i=>{
-    counts[i]=0;
+const incidents = [
+    "Vacaciones",
+    "Permiso sin goce",
+    "Permiso con goce",
+    "Incapacidad",
+    "Capacitación",
+    "Castigo",
+    "Plan de fin de semana",
+    "Vacante"
+];
+
+const warehouseSelect =
+    document.getElementById("warehouseSelect");
+
+const warehouseFilter =
+    document.getElementById("warehouseFilter");
+
+warehouses.forEach(w=>{
+
+    warehouseSelect.innerHTML += `
+        <option value="${w}">
+            ${w}
+        </option>
+    `;
+
+    warehouseFilter.innerHTML += `
+        <option value="${w}">
+            ${w}
+        </option>
+    `;
+
 });
 
-let selectedWarehouse="";
-let selectedShift="";
+warehouseFilter.innerHTML =
+    `<option value="all">Todas</option>` +
+    warehouseFilter.innerHTML;
 
-const dashboardBtn=document.getElementById("dashboardBtn");
-const reportBtn=document.getElementById("reportBtn");
+function updateClock(){
 
-const dashboardPage=document.getElementById("dashboardPage");
-const reportPage=document.getElementById("reportPage");
+    const now=new Date();
+
+    document.getElementById("date")
+        .innerText=now.toLocaleDateString();
+
+    document.getElementById("time")
+        .innerText=now.toLocaleTimeString();
+
+}
+
+setInterval(updateClock,1000);
+
+updateClock();
+
+const dashboardBtn =
+    document.getElementById("dashboardBtn");
+
+const reportBtn =
+    document.getElementById("reportBtn");
+
+const dashboardPage =
+    document.getElementById("dashboardPage");
+
+const reportPage =
+    document.getElementById("reportPage");
 
 dashboardBtn.onclick=()=>{
 
@@ -570,152 +578,205 @@ reportBtn.onclick=()=>{
 
 };
 
-function updateClock(){
+let records=[];
 
-    const now=new Date();
+function addRecord(){
 
-    document.getElementById("date")
-        .innerText=now.toLocaleDateString();
+    const id=Date.now();
 
-    document.getElementById("time")
-        .innerText=now.toLocaleTimeString();
+    records.push({
+        id,
+        position:"",
+        incident:"",
+        quantity:0
+    });
+
+    renderRecords();
 
 }
 
-setInterval(updateClock,1000);
+window.addRecord=addRecord;
 
-updateClock();
+function renderRecords(){
 
-function selectWarehouse(element,name){
+    const container =
+        document.getElementById("recordsContainer");
 
-    selectedWarehouse=name;
+    container.innerHTML="";
 
-    document
-        .querySelectorAll(".selector:not(.shift)")
-        .forEach(el=>el.classList.remove("active"));
+    records.forEach((record,index)=>{
 
-    element.classList.add("active");
+        const div=document.createElement("div");
+
+        div.className="record-card";
+
+        div.innerHTML=`
+
+            <div class="record-grid">
+
+                <div>
+
+                    <label>Puesto</label>
+
+                    <select onchange="updatePosition(${record.id},this.value)">
+
+                        <option value="">Selecciona</option>
+
+                        ${positions.map(p=>`
+                            <option value="${p}"
+                            ${record.position===p ? "selected":""}>
+                                ${p}
+                            </option>
+                        `).join("")}
+
+                    </select>
+
+                </div>
+
+                <div>
+
+                    <label>Incidencia</label>
+
+                    <select onchange="updateIncident(${record.id},this.value)">
+
+                        <option value="">Selecciona</option>
+
+                        ${incidents.map(i=>`
+                            <option value="${i}"
+                            ${record.incident===i ? "selected":""}>
+                                ${i}
+                            </option>
+                        `).join("")}
+
+                    </select>
+
+                </div>
+
+                <div>
+
+                    <label>Cantidad</label>
+
+                    <div class="counter">
+
+                        <button class="minus"
+                        onclick="changeQuantity(${record.id},-1)">
+                            -
+                        </button>
+
+                        <div class="count">
+                            ${record.quantity}
+                        </div>
+
+                        <button class="plus"
+                        onclick="changeQuantity(${record.id},1)">
+                            +
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div>
+
+                    <button class="delete-btn"
+                    onclick="removeRecord(${record.id})">
+                        ✖
+                    </button>
+
+                </div>
+
+            </div>
+
+        `;
+
+        container.appendChild(div);
+
+    });
 
     updateSummary();
 
 }
 
-window.selectWarehouse=selectWarehouse;
+window.updatePosition=(id,value)=>{
 
-function selectShift(element,name){
+    const r=records.find(x=>x.id===id);
 
-    selectedShift=name;
-
-    document
-        .querySelectorAll(".shift")
-        .forEach(el=>el.classList.remove("active"));
-
-    element.classList.add("active");
+    r.position=value;
 
     updateSummary();
 
-}
+};
 
-window.selectShift=selectShift;
+window.updateIncident=(id,value)=>{
 
-const container=document.getElementById("incidentsContainer");
+    const r=records.find(x=>x.id===id);
 
-incidents.forEach(type=>{
+    r.incident=value;
 
-    const card=document.createElement("div");
+    updateSummary();
 
-    card.className="incident-card";
+};
 
-    card.innerHTML=`
+window.changeQuantity=(id,delta)=>{
 
-        <div>${type}</div>
+    const r=records.find(x=>x.id===id);
 
-        <div class="counter">
+    r.quantity += delta;
 
-            <button class="minus">-</button>
+    if(r.quantity<0){
+        r.quantity=0;
+    }
 
-            <div class="count" id="${type}">0</div>
+    renderRecords();
 
-            <button class="plus">+</button>
+};
 
-        </div>
+window.removeRecord=(id)=>{
 
-    `;
+    records =
+        records.filter(r=>r.id!==id);
 
-    container.appendChild(card);
+    renderRecords();
 
-    const minus=card.querySelector(".minus");
-    const plus=card.querySelector(".plus");
-
-    minus.onclick=()=>{
-
-        if(counts[type]>0){
-
-            counts[type]--;
-
-            document.getElementById(type)
-                .innerText=counts[type];
-
-            updateSummary();
-
-        }
-
-    };
-
-    plus.onclick=()=>{
-
-        counts[type]++;
-
-        document.getElementById(type)
-            .innerText=counts[type];
-
-        updateSummary();
-
-    };
-
-});
+};
 
 function updateSummary(){
 
-    const summary=document.getElementById("summary");
+    const summary =
+        document.getElementById("summary");
 
     let total=0;
 
-    let html=`
+    let html="";
 
-        <div class="summary-item">
-            <strong>Nave</strong>
-            <span>${selectedWarehouse || "No seleccionada"}</span>
-        </div>
+    records.forEach(r=>{
 
-        <div class="summary-item">
-            <strong>Turno</strong>
-            <span>${selectedShift || "No seleccionado"}</span>
-        </div>
+        total += r.quantity;
 
-    `;
+        html += `
 
-    incidents.forEach(type=>{
+            <div style="margin-bottom:10px;">
 
-        total+=counts[type];
+                <strong>${r.position || "-"}</strong>
+                /
+                ${r.incident || "-"}
+                :
+                ${r.quantity}
 
-        html+=`
-
-            <div class="summary-item">
-                <span>${type}</span>
-                <strong>${counts[type]}</strong>
             </div>
 
         `;
 
     });
 
-    html+=`
+    html += `
 
-        <div class="summary-item">
-            <strong>Total</strong>
-            <strong>${total}</strong>
-        </div>
+        <hr><br>
+
+        <strong>
+            Total incidencias:
+            ${total}
+        </strong>
 
     `;
 
@@ -723,41 +784,35 @@ function updateSummary(){
 
 }
 
-updateSummary();
+addRecord();
 
 async function submitReport(){
 
-    const username=document.getElementById("username").value;
+    const username =
+        document.getElementById("username").value;
 
-    if(username.trim()===""){
+    const warehouse =
+        document.getElementById("warehouseSelect").value;
 
-        alert("Ingresa usuario");
+    const shift =
+        document.getElementById("shiftSelect").value;
 
-        return;
+    if(!username || !warehouse || !shift){
 
-    }
-
-    if(selectedWarehouse===""){
-
-        alert("Selecciona nave");
-
-        return;
-
-    }
-
-    if(selectedShift===""){
-
-        alert("Selecciona turno");
+        alert("Completa los campos");
 
         return;
 
     }
 
-    const total=
-        Object.values(counts)
-            .reduce((a,b)=>a+b,0);
+    const validRecords =
+        records.filter(r=>
+            r.position &&
+            r.incident &&
+            r.quantity>0
+        );
 
-    if(total===0){
+    if(validRecords.length===0){
 
         alert("Agrega incidencias");
 
@@ -765,29 +820,36 @@ async function submitReport(){
 
     }
 
+    const total =
+        validRecords.reduce((a,b)=>
+            a+b.quantity,0);
+
     const now=new Date();
-
-    const report={
-
-        username,
-        warehouse:selectedWarehouse,
-        shift:selectedShift,
-        incidents:{...counts},
-        total,
-
-        date:now.toLocaleDateString(),
-        time:now.toLocaleTimeString(),
-
-        timestamp:Date.now()
-
-    };
 
     await addDoc(
         collection(db,"reports"),
-        report
+        {
+
+            username,
+            warehouse,
+            shift,
+            records:validRecords,
+            total,
+
+            timestamp:Date.now(),
+
+            date:now.toLocaleDateString(),
+            time:now.toLocaleTimeString()
+
+        }
     );
 
-    resetForm();
+    document.getElementById("username").value="";
+    document.getElementById("shiftSelect").value="";
+
+    records=[];
+
+    addRecord();
 
     showToast();
 
@@ -795,33 +857,10 @@ async function submitReport(){
 
 window.submitReport=submitReport;
 
-function resetForm(){
-
-    incidents.forEach(type=>{
-
-        counts[type]=0;
-
-        document.getElementById(type)
-            .innerText=0;
-
-    });
-
-    selectedWarehouse="";
-    selectedShift="";
-
-    document.getElementById("username").value="";
-
-    document
-        .querySelectorAll(".selector")
-        .forEach(el=>el.classList.remove("active"));
-
-    updateSummary();
-
-}
-
 function showToast(){
 
-    const toast=document.getElementById("toast");
+    const toast =
+        document.getElementById("toast");
 
     toast.style.display="block";
 
@@ -833,7 +872,7 @@ function showToast(){
 
 }
 
-const lineChart=new Chart(
+const lineChart = new Chart(
 
     document.getElementById("lineChart"),
 
@@ -843,19 +882,13 @@ const lineChart=new Chart(
 
         data:{
 
-            labels:[
-                "Falta",
-                "PSG",
-                "PCG",
-                "Incapacidad",
-                "TE"
-            ],
+            labels:incidents,
 
             datasets:[{
 
                 label:"Incidencias",
 
-                data:[0,0,0,0,0],
+                data:[],
 
                 backgroundColor:"#D40511"
 
@@ -867,7 +900,7 @@ const lineChart=new Chart(
 
 );
 
-const barChart=new Chart(
+const barChart = new Chart(
 
     document.getElementById("barChart"),
 
@@ -877,17 +910,13 @@ const barChart=new Chart(
 
         data:{
 
-            labels:[
-                "Almacen",
-                "Nave4",
-                "Nave84"
-            ],
+            labels:warehouses,
 
             datasets:[{
 
                 label:"Totales",
 
-                data:[0,0,0],
+                data:[],
 
                 backgroundColor:"#FFCC00"
 
@@ -899,102 +928,120 @@ const barChart=new Chart(
 
 );
 
-function updateDashboard(reports=[]){
+function applyDateFilter(reports){
 
-    const warehouseFilter=
-        document.getElementById("warehouseFilter")
-            .value;
+    const filter =
+        document.getElementById("dateFilter").value;
 
-    const shiftFilter=
-        document.getElementById("shiftFilter")
-            .value;
+    const now=Date.now();
 
-    let filtered=reports;
+    return reports.filter(r=>{
 
-    if(warehouseFilter!=="all"){
+        const diff=now-r.timestamp;
+
+        switch(filter){
+
+            case "today":
+                return diff<86400000;
+
+            case "yesterday":
+                return diff>=86400000 &&
+                       diff<172800000;
+
+            case "week":
+                return diff<604800000;
+
+            case "month":
+                return diff<2592000000;
+
+            case "3months":
+                return diff<7776000000;
+
+            default:
+                return true;
+
+        }
+
+    });
+
+}
+
+function updateDashboard(reports){
+
+    const warehouse =
+        document.getElementById("warehouseFilter").value;
+
+    const shift =
+        document.getElementById("shiftFilter").value;
+
+    let filtered=[...reports];
+
+    filtered=applyDateFilter(filtered);
+
+    if(warehouse!=="all"){
 
         filtered=filtered.filter(r=>
-            r.warehouse===warehouseFilter
+            r.warehouse===warehouse
         );
 
     }
 
-    if(shiftFilter!=="all"){
+    if(shift!=="all"){
 
         filtered=filtered.filter(r=>
-            r.shift===shiftFilter
+            r.shift===shift
         );
 
     }
 
     let total=0;
-    let falta=0;
-    let incapacidad=0;
-    let te=0;
+
+    const incidentTotals={};
+
+    incidents.forEach(i=>{
+        incidentTotals[i]=0;
+    });
+
+    const warehouseTotals={};
+
+    warehouses.forEach(w=>{
+        warehouseTotals[w]=0;
+    });
 
     filtered.forEach(r=>{
 
         total+=r.total;
 
-        falta+=r.incidents["Falta"] || 0;
+        warehouseTotals[r.warehouse]+=r.total;
 
-        incapacidad+=
-            r.incidents["Incapacidad"] || 0;
+        r.records.forEach(rec=>{
 
-        te+=
-            r.incidents["Tiempo extra"] || 0;
+            incidentTotals[rec.incident]+=
+                rec.quantity;
+
+        });
 
     });
 
     document.getElementById("kpiTotal")
         .innerText=total;
 
-    document.getElementById("kpiFalta")
-        .innerText=falta;
+    document.getElementById("kpiVacaciones")
+        .innerText=incidentTotals["Vacaciones"];
 
     document.getElementById("kpiIncapacidad")
-        .innerText=incapacidad;
+        .innerText=incidentTotals["Incapacidad"];
 
-    document.getElementById("kpiTE")
-        .innerText=te;
+    document.getElementById("kpiVacante")
+        .innerText=incidentTotals["Vacante"];
 
-    lineChart.data.datasets[0].data=[
-
-        falta,
-
-        filtered.reduce((a,b)=>
-            a+(b.incidents["Permiso sin gose"] || 0),0),
-
-        filtered.reduce((a,b)=>
-            a+(b.incidents["Permiso con gose"] || 0),0),
-
-        incapacidad,
-
-        te
-
-    ];
+    lineChart.data.datasets[0].data =
+        incidents.map(i=>incidentTotals[i]);
 
     lineChart.update();
 
-    const warehouses={
-        Almacen:0,
-        Nave4:0,
-        Nave84:0
-    };
-
-    filtered.forEach(r=>{
-
-        warehouses[r.warehouse]+=r.total;
-
-    });
-
-    barChart.data.datasets[0].data=[
-
-        warehouses.Almacen,
-        warehouses.Nave4,
-        warehouses.Nave84
-
-    ];
+    barChart.data.datasets[0].data =
+        warehouses.map(w=>warehouseTotals[w]);
 
     barChart.update();
 
@@ -1002,56 +1049,63 @@ function updateDashboard(reports=[]){
 
 function loadReports(){
 
-    const table=document.getElementById("historyTable");
+    const table =
+        document.getElementById("historyTable");
 
-    onSnapshot(collection(db,"reports"),snapshot=>{
+    onSnapshot(
+        collection(db,"reports"),
+        snapshot=>{
 
-        const reports=[];
+            const reports=[];
 
-        table.innerHTML="";
+            table.innerHTML="";
 
-        snapshot.forEach(doc=>{
+            snapshot.forEach(doc=>{
 
-            reports.push(doc.data());
+                reports.push(doc.data());
 
-        });
+            });
 
-        reports.sort((a,b)=>
-            b.timestamp-a.timestamp
-        );
+            reports.sort((a,b)=>
+                b.timestamp-a.timestamp
+            );
 
-        reports.forEach(r=>{
+            reports.forEach(r=>{
 
-            table.innerHTML+=`
+                table.innerHTML += `
 
-                <tr>
+                    <tr>
 
-                    <td>${r.date}</td>
-                    <td>${r.time}</td>
-                    <td>${r.username}</td>
-                    <td>${r.warehouse}</td>
-                    <td>${r.shift}</td>
-                    <td>${r.total}</td>
+                        <td>${r.date}</td>
+                        <td>${r.username}</td>
+                        <td>${r.warehouse}</td>
+                        <td>${r.shift}</td>
+                        <td>${r.total}</td>
 
-                </tr>
+                    </tr>
 
-            `;
+                `;
 
-        });
+            });
 
-        updateDashboard(reports);
+            updateDashboard(reports);
 
-    });
+        }
+    );
 
 }
 
-document
-    .getElementById("warehouseFilter")
-    .addEventListener("change",loadReports);
+[
+    "warehouseFilter",
+    "shiftFilter",
+    "dateFilter"
+].forEach(id=>{
 
-document
-    .getElementById("shiftFilter")
-    .addEventListener("change",loadReports);
+    document
+        .getElementById(id)
+        .addEventListener("change",loadReports);
+
+});
 
 loadReports();
 
