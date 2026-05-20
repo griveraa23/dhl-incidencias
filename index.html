@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>DHL Workforce Analytics V3</title>
+<title>DHL Incidencias V4</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -14,7 +14,7 @@
 :root{
     --dhl-red:#D40511;
     --dhl-yellow:#FFCC00;
-    --bg:#f5f5f5;
+    --bg:#f4f4f4;
 }
 
 *{
@@ -26,7 +26,6 @@
 
 body{
     background:var(--bg);
-    color:#222;
 }
 
 header{
@@ -44,6 +43,7 @@ header h1{
 
 .datetime{
     font-weight:bold;
+    color:#333;
 }
 
 .container{
@@ -84,9 +84,9 @@ header h1{
 
 .card{
     background:white;
-    border-radius:20px;
     padding:20px;
-    box-shadow:0 3px 10px rgba(0,0,0,.1);
+    border-radius:20px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
     margin-bottom:20px;
 }
 
@@ -96,8 +96,8 @@ header h1{
     gap:20px;
 }
 
-select,
-input{
+.filters select,
+.filters input{
     width:100%;
     padding:12px;
     border-radius:12px;
@@ -113,37 +113,90 @@ input{
 
 .kpi{
     background:white;
-    border-radius:20px;
     padding:20px;
+    border-radius:20px;
     border-left:8px solid var(--dhl-red);
 }
 
 .kpi-number{
     font-size:38px;
+    font-weight:bold;
     color:var(--dhl-red);
+}
+
+.selector-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:15px;
+    margin:20px 0;
+}
+
+.selector{
+    padding:15px 20px;
+    border-radius:15px;
+    border:2px solid #ccc;
+    cursor:pointer;
+    background:white;
     font-weight:bold;
 }
 
-.record-card{
-    background:#fafafa;
-    border-radius:18px;
-    padding:20px;
-    margin-top:20px;
-    border:2px solid #eee;
+.selector.active{
+    background:var(--dhl-red);
+    color:white;
+    border-color:var(--dhl-red);
 }
 
-.record-grid{
-    display:grid;
-    grid-template-columns:2fr 2fr 1fr auto;
+.position-block{
+    background:#fafafa;
+    border:2px solid #eee;
+    border-radius:20px;
+    padding:20px;
+    margin-bottom:20px;
+}
+
+.position-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+    flex-wrap:wrap;
     gap:15px;
-    align-items:end;
+}
+
+.position-title{
+    font-size:20px;
+    font-weight:bold;
+    color:var(--dhl-red);
+}
+
+.remove-btn{
+    background:#ffe5e5;
+    color:var(--dhl-red);
+    border:none;
+    padding:10px 15px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.incidents-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+}
+
+.incident-card{
+    background:white;
+    border-radius:15px;
+    padding:15px;
 }
 
 .counter{
     display:flex;
-    align-items:center;
     justify-content:center;
-    gap:10px;
+    align-items:center;
+    gap:12px;
+    margin-top:12px;
 }
 
 .counter button{
@@ -160,34 +213,25 @@ input{
 }
 
 .minus{
-    background:#ffd6d6;
+    background:#ffdede;
     color:var(--dhl-red);
 }
 
 .count{
     font-size:24px;
     font-weight:bold;
-    min-width:30px;
-    text-align:center;
 }
 
-.add-btn{
-    background:var(--dhl-yellow);
+.add-position-btn{
+    width:100%;
+    padding:16px;
     border:none;
-    padding:14px;
-    border-radius:12px;
+    border-radius:15px;
+    background:var(--dhl-yellow);
+    font-size:18px;
     font-weight:bold;
     cursor:pointer;
-    margin-top:20px;
-}
-
-.delete-btn{
-    background:var(--dhl-red);
-    color:white;
-    border:none;
-    padding:10px 15px;
-    border-radius:10px;
-    cursor:pointer;
+    margin-top:15px;
 }
 
 .submit-btn{
@@ -203,6 +247,20 @@ input{
     margin-top:20px;
 }
 
+.summary-item{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:10px;
+    padding-bottom:10px;
+    border-bottom:1px solid #eee;
+}
+
+.report-layout{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:20px;
+}
+
 .history-table{
     width:100%;
     border-collapse:collapse;
@@ -212,7 +270,6 @@ input{
 .history-table td{
     padding:12px;
     border-bottom:1px solid #eee;
-    text-align:left;
 }
 
 .toast{
@@ -226,16 +283,9 @@ input{
     display:none;
 }
 
-.summary-box{
-    background:#fafafa;
-    padding:20px;
-    border-radius:15px;
-    margin-top:20px;
-}
-
 @media(max-width:900px){
 
-    .record-grid{
+    .report-layout{
         grid-template-columns:1fr;
     }
 
@@ -249,7 +299,7 @@ input{
 
 <header>
 
-    <h1>📦 DHL Workforce Analytics V3</h1>
+    <h1>📦 DHL Sistema de Incidencias V4</h1>
 
     <div class="datetime">
         <div id="date"></div>
@@ -281,29 +331,42 @@ input{
             <div class="filters">
 
                 <div>
+
                     <label>Nave</label>
+
                     <select id="warehouseFilter"></select>
+
                 </div>
 
                 <div>
+
                     <label>Turno</label>
+
                     <select id="shiftFilter">
+
                         <option value="all">Todos</option>
                         <option value="Primero">Primero</option>
                         <option value="Segundo">Segundo</option>
                         <option value="Tercero">Tercero</option>
+
                     </select>
+
                 </div>
 
                 <div>
+
                     <label>Periodo</label>
+
                     <select id="dateFilter">
+
                         <option value="today">Hoy</option>
                         <option value="yesterday">Ayer</option>
-                        <option value="week">Semana</option>
-                        <option value="month">Mes</option>
+                        <option value="week">Esta Semana</option>
+                        <option value="month">Este Mes</option>
                         <option value="3months">Últimos 3 Meses</option>
+
                     </select>
+
                 </div>
 
             </div>
@@ -329,7 +392,7 @@ input{
 
             <div class="kpi">
                 <h3>Vacantes</h3>
-                <div class="kpi-number" id="kpiVacante">0</div>
+                <div class="kpi-number" id="kpiVacantes">0</div>
             </div>
 
         </div>
@@ -337,6 +400,8 @@ input{
         <div class="card">
 
             <h2>📈 Incidencias</h2>
+
+            <br>
 
             <canvas id="lineChart"></canvas>
 
@@ -346,92 +411,75 @@ input{
 
             <h2>🏭 Incidencias por Nave</h2>
 
+            <br>
+
             <canvas id="barChart"></canvas>
 
         </div>
 
     </div>
 
-    <!-- REPORTAR -->
+    <!-- REPORTE -->
 
     <div id="reportPage" class="page">
 
-        <div class="card">
+        <div class="report-layout">
 
-            <h2>📝 Captura de Incidencias</h2>
+            <div class="card">
 
-            <br>
+                <h2>📝 Captura</h2>
 
-            <label>Usuario</label>
+                <br>
 
-            <input type="text" id="username" placeholder="Ejemplo: Memo">
+                <label>Usuario</label>
 
-            <br><br>
+                <input type="text" id="username">
 
-            <label>Nave</label>
+                <br><br>
 
-            <select id="warehouseSelect"></select>
+                <h3>Selecciona Nave</h3>
 
-            <br><br>
+                <div class="selector-group" id="warehouseSelectors"></div>
 
-            <label>Turno</label>
+                <h3>Selecciona Turno</h3>
 
-            <select id="shiftSelect">
+                <div class="selector-group">
 
-                <option value="">Selecciona</option>
-                <option value="Primero">Primero</option>
-                <option value="Segundo">Segundo</option>
-                <option value="Tercero">Tercero</option>
+                    <div class="selector shift" onclick="selectShift(this,'Primero')">
+                        ☀️ Primero
+                    </div>
 
-            </select>
+                    <div class="selector shift" onclick="selectShift(this,'Segundo')">
+                        🌤 Segundo
+                    </div>
 
-            <div id="recordsContainer"></div>
+                    <div class="selector shift" onclick="selectShift(this,'Tercero')">
+                        🌙 Tercero
+                    </div>
 
-            <button class="add-btn" onclick="addRecord()">
-                ➕ Agregar otra incidencia
-            </button>
+                </div>
 
-            <div class="summary-box">
+                <div id="positionsContainer"></div>
 
-                <h3>📋 Resumen</h3>
+                <button class="add-position-btn" onclick="addPositionBlock()">
+                    ➕ Agregar Puesto
+                </button>
+
+            </div>
+
+            <div class="card">
+
+                <h2>🛒 Resumen</h2>
 
                 <br>
 
                 <div id="summary"></div>
 
+                <button class="submit-btn" onclick="submitReport()">
+                    🚀 Enviar Reporte
+                </button>
+
             </div>
-
-            <button class="submit-btn" onclick="submitReport()">
-                🚀 Enviar Reporte
-            </button>
-
-        </div>
-
-        <div class="card">
-
-            <h2>📚 Historial</h2>
-
-            <br>
-
-            <table class="history-table">
-
-                <thead>
-
-                    <tr>
-
-                        <th>Fecha</th>
-                        <th>Usuario</th>
-                        <th>Nave</th>
-                        <th>Turno</th>
-                        <th>Total</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody id="historyTable"></tbody>
-
-            </table>
 
         </div>
 
@@ -504,41 +552,21 @@ const incidents = [
     "Vacante"
 ];
 
-const warehouseSelect =
-    document.getElementById("warehouseSelect");
+let selectedWarehouse="";
+let selectedShift="";
+let reports=[];
 
-const warehouseFilter =
-    document.getElementById("warehouseFilter");
-
-warehouses.forEach(w=>{
-
-    warehouseSelect.innerHTML += `
-        <option value="${w}">
-            ${w}
-        </option>
-    `;
-
-    warehouseFilter.innerHTML += `
-        <option value="${w}">
-            ${w}
-        </option>
-    `;
-
-});
-
-warehouseFilter.innerHTML =
-    `<option value="all">Todas</option>` +
-    warehouseFilter.innerHTML;
+const positionsData=[];
 
 function updateClock(){
 
     const now=new Date();
 
-    document.getElementById("date")
-        .innerText=now.toLocaleDateString();
+    document.getElementById("date").innerText=
+        now.toLocaleDateString();
 
-    document.getElementById("time")
-        .innerText=now.toLocaleTimeString();
+    document.getElementById("time").innerText=
+        now.toLocaleTimeString();
 
 }
 
@@ -546,17 +574,8 @@ setInterval(updateClock,1000);
 
 updateClock();
 
-const dashboardBtn =
-    document.getElementById("dashboardBtn");
-
-const reportBtn =
-    document.getElementById("reportBtn");
-
-const dashboardPage =
-    document.getElementById("dashboardPage");
-
-const reportPage =
-    document.getElementById("reportPage");
+const dashboardBtn=document.getElementById("dashboardBtn");
+const reportBtn=document.getElementById("reportBtn");
 
 dashboardBtn.onclick=()=>{
 
@@ -578,97 +597,127 @@ reportBtn.onclick=()=>{
 
 };
 
-let records=[];
+function renderWarehouses(){
 
-function addRecord(){
+    const container=
+        document.getElementById("warehouseSelectors");
 
-    const id=Date.now();
+    const filter=
+        document.getElementById("warehouseFilter");
 
-    records.push({
-        id,
-        position:"",
-        incident:"",
-        quantity:0
+    filter.innerHTML=`<option value="all">Todas</option>`;
+
+    warehouses.forEach(w=>{
+
+        filter.innerHTML+=`<option value="${w}">${w}</option>`;
+
+        container.innerHTML+=`
+
+            <div class="selector"
+                 onclick="selectWarehouse(this,'${w}')">
+
+                ${w}
+
+            </div>
+
+        `;
+
     });
-
-    renderRecords();
 
 }
 
-window.addRecord=addRecord;
+renderWarehouses();
 
-function renderRecords(){
+function selectWarehouse(element,name){
 
-    const container =
-        document.getElementById("recordsContainer");
+    selectedWarehouse=name;
+
+    document
+        .querySelectorAll("#warehouseSelectors .selector")
+        .forEach(el=>el.classList.remove("active"));
+
+    element.classList.add("active");
+
+    updateSummary();
+
+}
+
+window.selectWarehouse=selectWarehouse;
+
+function selectShift(element,name){
+
+    selectedShift=name;
+
+    document
+        .querySelectorAll(".shift")
+        .forEach(el=>el.classList.remove("active"));
+
+    element.classList.add("active");
+
+    updateSummary();
+
+}
+
+window.selectShift=selectShift;
+
+function addPositionBlock(){
+
+    const id=Date.now();
+
+    const data={
+        id,
+        position:"",
+        incidents:{}
+    };
+
+    incidents.forEach(i=>{
+        data.incidents[i]=0;
+    });
+
+    positionsData.push(data);
+
+    renderPositions();
+
+}
+
+window.addPositionBlock=addPositionBlock;
+
+function renderPositions(){
+
+    const container=
+        document.getElementById("positionsContainer");
 
     container.innerHTML="";
 
-    records.forEach((record,index)=>{
+    positionsData.forEach(block=>{
 
         const div=document.createElement("div");
 
-        div.className="record-card";
+        div.className="position-block";
 
-        div.innerHTML=`
+        let incidentHTML="";
 
-            <div class="record-grid">
+        incidents.forEach(type=>{
 
-                <div>
+            incidentHTML+=`
 
-                    <label>Puesto</label>
+                <div class="incident-card">
 
-                    <select onchange="updatePosition(${record.id},this.value)">
-
-                        <option value="">Selecciona</option>
-
-                        ${positions.map(p=>`
-                            <option value="${p}"
-                            ${record.position===p ? "selected":""}>
-                                ${p}
-                            </option>
-                        `).join("")}
-
-                    </select>
-
-                </div>
-
-                <div>
-
-                    <label>Incidencia</label>
-
-                    <select onchange="updateIncident(${record.id},this.value)">
-
-                        <option value="">Selecciona</option>
-
-                        ${incidents.map(i=>`
-                            <option value="${i}"
-                            ${record.incident===i ? "selected":""}>
-                                ${i}
-                            </option>
-                        `).join("")}
-
-                    </select>
-
-                </div>
-
-                <div>
-
-                    <label>Cantidad</label>
+                    <div>${type}</div>
 
                     <div class="counter">
 
                         <button class="minus"
-                        onclick="changeQuantity(${record.id},-1)">
+                            onclick="changeCount('${block.id}','${type}',-1)">
                             -
                         </button>
 
                         <div class="count">
-                            ${record.quantity}
+                            ${block.incidents[type]}
                         </div>
 
                         <button class="plus"
-                        onclick="changeQuantity(${record.id},1)">
+                            onclick="changeCount('${block.id}','${type}',1)">
                             +
                         </button>
 
@@ -676,14 +725,41 @@ function renderRecords(){
 
                 </div>
 
-                <div>
+            `;
 
-                    <button class="delete-btn"
-                    onclick="removeRecord(${record.id})">
-                        ✖
-                    </button>
+        });
 
-                </div>
+        div.innerHTML=`
+
+            <div class="position-header">
+
+                <select onchange="changePosition('${block.id}',this.value)">
+
+                    <option value="">Selecciona puesto</option>
+
+                    ${positions.map(p=>`
+
+                        <option
+                            value="${p}"
+                            ${block.position===p?"selected":""}
+                        >
+                            ${p}
+                        </option>
+
+                    `).join("")}
+
+                </select>
+
+                <button class="remove-btn"
+                    onclick="removePosition('${block.id}')">
+                    ❌ Eliminar
+                </button>
+
+            </div>
+
+            <div class="incidents-grid">
+
+                ${incidentHTML}
 
             </div>
 
@@ -697,86 +773,96 @@ function renderRecords(){
 
 }
 
-window.updatePosition=(id,value)=>{
+function changePosition(id,value){
 
-    const r=records.find(x=>x.id===id);
+    const block=
+        positionsData.find(x=>x.id==id);
 
-    r.position=value;
-
-    updateSummary();
-
-};
-
-window.updateIncident=(id,value)=>{
-
-    const r=records.find(x=>x.id===id);
-
-    r.incident=value;
+    block.position=value;
 
     updateSummary();
 
-};
+}
 
-window.changeQuantity=(id,delta)=>{
+window.changePosition=changePosition;
 
-    const r=records.find(x=>x.id===id);
+function changeCount(id,incident,qty){
 
-    r.quantity += delta;
+    const block=
+        positionsData.find(x=>x.id==id);
 
-    if(r.quantity<0){
-        r.quantity=0;
+    if(block.incidents[incident]+qty>=0){
+
+        block.incidents[incident]+=qty;
+
     }
 
-    renderRecords();
+    renderPositions();
 
-};
+}
 
-window.removeRecord=(id)=>{
+window.changeCount=changeCount;
 
-    records =
-        records.filter(r=>r.id!==id);
+function removePosition(id){
 
-    renderRecords();
+    const index=
+        positionsData.findIndex(x=>x.id==id);
 
-};
+    positionsData.splice(index,1);
+
+    renderPositions();
+
+}
+
+window.removePosition=removePosition;
 
 function updateSummary(){
 
-    const summary =
-        document.getElementById("summary");
+    const summary=document.getElementById("summary");
 
     let total=0;
 
-    let html="";
+    let html=`
 
-    records.forEach(r=>{
+        <div class="summary-item">
+            <strong>Nave</strong>
+            <span>${selectedWarehouse || "-"}</span>
+        </div>
 
-        total += r.quantity;
+        <div class="summary-item">
+            <strong>Turno</strong>
+            <span>${selectedShift || "-"}</span>
+        </div>
 
-        html += `
+    `;
 
-            <div style="margin-bottom:10px;">
+    positionsData.forEach(p=>{
 
-                <strong>${r.position || "-"}</strong>
-                /
-                ${r.incident || "-"}
-                :
-                ${r.quantity}
+        let subtotal=0;
 
+        incidents.forEach(i=>{
+            subtotal+=p.incidents[i];
+        });
+
+        total+=subtotal;
+
+        html+=`
+
+            <div class="summary-item">
+                <span>${p.position || "Sin puesto"}</span>
+                <strong>${subtotal}</strong>
             </div>
 
         `;
 
     });
 
-    html += `
+    html+=`
 
-        <hr><br>
-
-        <strong>
-            Total incidencias:
-            ${total}
-        </strong>
+        <div class="summary-item">
+            <strong>Total</strong>
+            <strong>${total}</strong>
+        </div>
 
     `;
 
@@ -784,72 +870,62 @@ function updateSummary(){
 
 }
 
-addRecord();
+addPositionBlock();
 
 async function submitReport(){
 
-    const username =
+    const username=
         document.getElementById("username").value;
 
-    const warehouse =
-        document.getElementById("warehouseSelect").value;
-
-    const shift =
-        document.getElementById("shiftSelect").value;
-
-    if(!username || !warehouse || !shift){
-
-        alert("Completa los campos");
-
+    if(username.trim()===""){
+        alert("Ingresa usuario");
         return;
-
     }
 
-    const validRecords =
-        records.filter(r=>
-            r.position &&
-            r.incident &&
-            r.quantity>0
-        );
+    if(selectedWarehouse===""){
+        alert("Selecciona nave");
+        return;
+    }
 
-    if(validRecords.length===0){
+    if(selectedShift===""){
+        alert("Selecciona turno");
+        return;
+    }
 
+    const total=
+        positionsData.reduce((acc,p)=>{
+
+            return acc +
+                Object.values(p.incidents)
+                    .reduce((a,b)=>a+b,0);
+
+        },0);
+
+    if(total===0){
         alert("Agrega incidencias");
-
         return;
-
     }
-
-    const total =
-        validRecords.reduce((a,b)=>
-            a+b.quantity,0);
 
     const now=new Date();
 
-    await addDoc(
-        collection(db,"reports"),
-        {
+    await addDoc(collection(db,"reports"),{
 
-            username,
-            warehouse,
-            shift,
-            records:validRecords,
-            total,
+        username,
+        warehouse:selectedWarehouse,
+        shift:selectedShift,
+        positions:positionsData,
+        total,
 
-            timestamp:Date.now(),
+        date:now.toLocaleDateString(),
+        time:now.toLocaleTimeString(),
 
-            date:now.toLocaleDateString(),
-            time:now.toLocaleTimeString()
+        timestamp:Date.now(),
 
-        }
-    );
+        isoDate:now.toISOString()
 
-    document.getElementById("username").value="";
-    document.getElementById("shiftSelect").value="";
+    });
 
-    records=[];
-
-    addRecord();
+    resetForm();
 
     showToast();
 
@@ -857,105 +933,114 @@ async function submitReport(){
 
 window.submitReport=submitReport;
 
+function resetForm(){
+
+    positionsData.length=0;
+
+    addPositionBlock();
+
+    selectedWarehouse="";
+    selectedShift="";
+
+    document.getElementById("username").value="";
+
+    document
+        .querySelectorAll(".selector")
+        .forEach(el=>el.classList.remove("active"));
+
+}
+
 function showToast(){
 
-    const toast =
-        document.getElementById("toast");
+    const toast=document.getElementById("toast");
 
     toast.style.display="block";
 
     setTimeout(()=>{
-
         toast.style.display="none";
-
     },3000);
 
 }
 
-const lineChart = new Chart(
-
+const lineChart=new Chart(
     document.getElementById("lineChart"),
-
     {
-
         type:"bar",
-
         data:{
-
             labels:incidents,
-
             datasets:[{
-
                 label:"Incidencias",
-
-                data:[],
-
+                data:new Array(incidents.length).fill(0),
                 backgroundColor:"#D40511"
-
             }]
-
         }
-
     }
-
 );
 
-const barChart = new Chart(
-
+const barChart=new Chart(
     document.getElementById("barChart"),
-
     {
-
         type:"bar",
-
         data:{
-
             labels:warehouses,
-
             datasets:[{
-
                 label:"Totales",
-
-                data:[],
-
+                data:new Array(warehouses.length).fill(0),
                 backgroundColor:"#FFCC00"
-
             }]
-
         }
-
     }
-
 );
 
-function applyDateFilter(reports){
+function filterReports(data){
 
-    const filter =
+    const warehouseFilter=
+        document.getElementById("warehouseFilter").value;
+
+    const shiftFilter=
+        document.getElementById("shiftFilter").value;
+
+    const dateFilter=
         document.getElementById("dateFilter").value;
 
-    const now=Date.now();
+    let filtered=[...data];
 
-    return reports.filter(r=>{
+    const today=new Date();
 
-        const diff=now-r.timestamp;
+    filtered=filtered.filter(r=>{
 
-        switch(filter){
+        const reportDate=new Date(r.isoDate);
+
+        const sameDay=
+            reportDate.toDateString()===
+            today.toDateString();
+
+        const yesterday=new Date();
+        yesterday.setDate(today.getDate()-1);
+
+        const sameYesterday=
+            reportDate.toDateString()===
+            yesterday.toDateString();
+
+        const diffDays=
+            (today-reportDate)/(1000*60*60*24);
+
+        switch(dateFilter){
 
             case "today":
-                return diff<86400000;
+                return sameDay;
 
             case "yesterday":
-                return diff>=86400000 &&
-                       diff<172800000;
+                return sameYesterday;
 
             case "week":
-                return diff<604800000;
+                return diffDays<=7;
 
             case "month":
-                return diff<2592000000;
+                return diffDays<=30;
 
             case "3months":
-                return diff<7776000000;
+                return diffDays<=90;
 
             default:
                 return true;
@@ -964,35 +1049,30 @@ function applyDateFilter(reports){
 
     });
 
+    if(warehouseFilter!=="all"){
+
+        filtered=filtered.filter(r=>
+            r.warehouse===warehouseFilter
+        );
+
+    }
+
+    if(shiftFilter!=="all"){
+
+        filtered=filtered.filter(r=>
+            r.shift===shiftFilter
+        );
+
+    }
+
+    return filtered;
+
 }
 
-function updateDashboard(reports){
+function updateDashboard(data){
 
-    const warehouse =
-        document.getElementById("warehouseFilter").value;
-
-    const shift =
-        document.getElementById("shiftFilter").value;
-
-    let filtered=[...reports];
-
-    filtered=applyDateFilter(filtered);
-
-    if(warehouse!=="all"){
-
-        filtered=filtered.filter(r=>
-            r.warehouse===warehouse
-        );
-
-    }
-
-    if(shift!=="all"){
-
-        filtered=filtered.filter(r=>
-            r.shift===shift
-        );
-
-    }
+    const filtered=
+        filterReports(data);
 
     let total=0;
 
@@ -1014,10 +1094,14 @@ function updateDashboard(reports){
 
         warehouseTotals[r.warehouse]+=r.total;
 
-        r.records.forEach(rec=>{
+        r.positions.forEach(p=>{
 
-            incidentTotals[rec.incident]+=
-                rec.quantity;
+            incidents.forEach(i=>{
+
+                incidentTotals[i]+=
+                    p.incidents[i] || 0;
+
+            });
 
         });
 
@@ -1032,15 +1116,15 @@ function updateDashboard(reports){
     document.getElementById("kpiIncapacidad")
         .innerText=incidentTotals["Incapacidad"];
 
-    document.getElementById("kpiVacante")
+    document.getElementById("kpiVacantes")
         .innerText=incidentTotals["Vacante"];
 
-    lineChart.data.datasets[0].data =
+    lineChart.data.datasets[0].data=
         incidents.map(i=>incidentTotals[i]);
 
     lineChart.update();
 
-    barChart.data.datasets[0].data =
+    barChart.data.datasets[0].data=
         warehouses.map(w=>warehouseTotals[w]);
 
     barChart.update();
@@ -1049,63 +1133,33 @@ function updateDashboard(reports){
 
 function loadReports(){
 
-    const table =
-        document.getElementById("historyTable");
+    onSnapshot(collection(db,"reports"),snapshot=>{
 
-    onSnapshot(
-        collection(db,"reports"),
-        snapshot=>{
+        reports=[];
 
-            const reports=[];
+        snapshot.forEach(doc=>{
 
-            table.innerHTML="";
+            reports.push(doc.data());
 
-            snapshot.forEach(doc=>{
+        });
 
-                reports.push(doc.data());
+        updateDashboard(reports);
 
-            });
-
-            reports.sort((a,b)=>
-                b.timestamp-a.timestamp
-            );
-
-            reports.forEach(r=>{
-
-                table.innerHTML += `
-
-                    <tr>
-
-                        <td>${r.date}</td>
-                        <td>${r.username}</td>
-                        <td>${r.warehouse}</td>
-                        <td>${r.shift}</td>
-                        <td>${r.total}</td>
-
-                    </tr>
-
-                `;
-
-            });
-
-            updateDashboard(reports);
-
-        }
-    );
+    });
 
 }
 
-[
-    "warehouseFilter",
-    "shiftFilter",
-    "dateFilter"
-].forEach(id=>{
+document
+    .getElementById("warehouseFilter")
+    .addEventListener("change",()=>updateDashboard(reports));
 
-    document
-        .getElementById(id)
-        .addEventListener("change",loadReports);
+document
+    .getElementById("shiftFilter")
+    .addEventListener("change",()=>updateDashboard(reports));
 
-});
+document
+    .getElementById("dateFilter")
+    .addEventListener("change",()=>updateDashboard(reports));
 
 loadReports();
 
