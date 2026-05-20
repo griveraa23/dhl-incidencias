@@ -469,17 +469,6 @@ header h1{
             📝 Programar
         </button>
 
-        <button id="logoutBtn"
-            style="
-                background:#222;
-                color:white;
-                max-width:220px;
-            ">
-
-            🔒 Cerrar Sesión
-
-        </button>
-
     </div>
 
     <!-- DASHBOARD -->
@@ -767,6 +756,59 @@ const users=[
 
 let currentUser=null;
 
+/* VARIABLES DEL SISTEMA */
+
+const warehouses = [
+"Nave 1",
+"Nave 4",
+"Nave 26",
+"Nave 52",
+"Nave 84",
+"Nave 82",
+"Nave 101",
+"Nave 109",
+"Forvia/HBPO",
+"Mtto MHE",
+"Falcon",
+"Transportes"
+];
+
+const positions = [
+"Operario Flexible",
+"Tractorista",
+"Montacarguista",
+"Gruista",
+"Analista",
+"Coordinador"
+];
+
+const incidents = [
+"Vacante",
+"Capacitación",
+"Ausentismo",
+"Incapacidad",
+"Castigo",
+"Permiso sin goce",
+"Permiso con goce",
+"Vacaciones",
+"Producción",
+"Llenado de proceso",
+"Llenado de proceso (PAGADO)",
+"Actividades especiales VW",
+"Atraso ruta transporte",
+"Actividades especiales DHL",
+"Talleres / Cursos",
+"Sindicato"
+];
+
+let selectedWarehouse="";
+let selectedShift="";
+let reports=[];
+let activeIncident=null;
+
+const positionsData=[];    
+    
+
 /* LOGIN */
 
 function login(){
@@ -855,6 +897,19 @@ if(savedUser){
 
 }
 
+/* FECHAS */
+
+const today = new Date();
+
+document.getElementById("scheduledDate").value =
+    formatDate(today);
+
+document.getElementById("startDate").value =
+    formatDate(today);
+
+document.getElementById("endDate").value =
+    formatDate(today);    
+
 /* RELOJ */
 
 function updateClock(){
@@ -895,13 +950,15 @@ reportBtn.onclick=()=>{
 
 function renderWarehouses(){
 
-    const selectorContainer=
+    const selectorContainer =
         document.getElementById("warehouseSelectors");
 
-    const filter=
+    const filter =
         document.getElementById("warehouseFilter");
 
-    filter.innerHTML=
+    selectorContainer.innerHTML = "";
+
+    filter.innerHTML =
         `<option value="all">Todas</option>`;
 
     warehouses.forEach(w=>{
@@ -918,9 +975,11 @@ function renderWarehouses(){
         `;
 
         filter.innerHTML += `
+
             <option value="${w}">
                 ${w}
             </option>
+
         `;
 
     });
@@ -1243,11 +1302,16 @@ function resetForm(){
     selectedWarehouse="";
     selectedShift="";
 
-    document.getElementById("username").value="";
+    document.getElementById("username").value =
+    currentUser.name;
 
     document
-        .querySelectorAll(".selector")
-        .forEach(el=>el.classList.remove("active"));
+    .querySelectorAll("#warehouseSelectors .selector")
+    .forEach(el=>el.classList.remove("active"));
+
+document
+    .querySelectorAll(".shift")
+    .forEach(el=>el.classList.remove("active"));
 
     updateSummary();
 
@@ -1380,13 +1444,15 @@ function filterReports(data){
     const shiftFilter=
         document.getElementById("shiftFilter").value;
 
-    const startDate=
-        normalizeDate(document.getElementById("startDate").value);
+const startDate =
+    normalizeDate(document.getElementById("startDate").value);
 
-    const endDate=
-        normalizeDate(document.getElementById("endDate").value);
+const endDate =
+    normalizeDate(document.getElementById("endDate").value);
 
+if(endDate){
     endDate.setHours(23,59,59,999);
+}
 
     return data.filter(r=>{
 
