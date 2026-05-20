@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>DHL Workforce Planning V6</title>
+<title>DHL Workforce Planning V7</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -46,7 +46,7 @@ header h1{
 }
 
 .container{
-    max-width:1800px;
+    max-width:1900px;
     margin:auto;
     padding:20px;
 }
@@ -103,6 +103,27 @@ header h1{
     border:1px solid #ccc;
 }
 
+.quick-filters{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:20px;
+}
+
+.quick-btn{
+    padding:12px 18px;
+    border:none;
+    border-radius:12px;
+    background:#eee;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.quick-btn.active{
+    background:var(--dhl-red);
+    color:white;
+}
+
 .kpis{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -115,10 +136,25 @@ header h1{
     padding:20px;
     border-radius:20px;
     border-left:8px solid var(--dhl-red);
+    cursor:pointer;
+    transition:.2s;
+}
+
+.kpi:hover{
+    transform:scale(1.02);
+}
+
+.kpi.active{
+    background:var(--dhl-red);
+    color:white;
+}
+
+.kpi.active .kpi-number{
+    color:white;
 }
 
 .kpi-number{
-    font-size:40px;
+    font-size:38px;
     font-weight:bold;
     color:var(--dhl-red);
 }
@@ -206,14 +242,12 @@ header h1{
 }
 
 .add-position-btn{
-    width:100%;
-    padding:18px;
+    padding:14px 20px;
     border:none;
-    border-radius:15px;
+    border-radius:12px;
     background:var(--dhl-yellow);
-    font-size:18px;
-    font-weight:bold;
     cursor:pointer;
+    font-weight:bold;
 }
 
 .submit-btn{
@@ -253,6 +287,18 @@ header h1{
     gap:20px;
 }
 
+.history-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.history-table th,
+.history-table td{
+    padding:12px;
+    border-bottom:1px solid #eee;
+    text-align:left;
+}
+
 .toast{
     position:fixed;
     bottom:20px;
@@ -280,7 +326,7 @@ header h1{
 
 <header>
 
-    <h1>📦 DHL Workforce Planning V6</h1>
+    <h1>📦 DHL Workforce Planning V7</h1>
 
     <div class="datetime">
         <div id="date"></div>
@@ -312,43 +358,53 @@ header h1{
             <div class="filters">
 
                 <div>
-
                     <label>Nave</label>
-
                     <select id="warehouseFilter"></select>
-
                 </div>
 
                 <div>
-
                     <label>Turno</label>
-
                     <select id="shiftFilter">
-
                         <option value="all">Todos</option>
                         <option value="Primero">Primero</option>
                         <option value="Segundo">Segundo</option>
                         <option value="Tercero">Tercero</option>
-
                     </select>
-
                 </div>
 
                 <div>
-
-                    <label>Periodo</label>
-
-                    <select id="dateFilter">
-
-                        <option value="today">Hoy</option>
-                        <option value="tomorrow">Mañana</option>
-                        <option value="week">Esta Semana</option>
-                        <option value="month">Este Mes</option>
-                        <option value="3months">Próximos 3 Meses</option>
-
-                    </select>
-
+                    <label>Fecha Inicio</label>
+                    <input type="date" id="startDate">
                 </div>
+
+                <div>
+                    <label>Fecha Fin</label>
+                    <input type="date" id="endDate">
+                </div>
+
+            </div>
+
+            <div class="quick-filters">
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('today')">
+                    Hoy
+                </button>
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('week')">
+                    Semana
+                </button>
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('month')">
+                    Mes
+                </button>
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('3months')">
+                    3 Meses
+                </button>
 
             </div>
 
@@ -376,9 +432,37 @@ header h1{
 
         </div>
 
+        <div class="card">
+
+            <h2>📚 Histórico</h2>
+
+            <br>
+
+            <table class="history-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Fecha</th>
+                        <th>Usuario</th>
+                        <th>Nave</th>
+                        <th>Turno</th>
+                        <th>Total</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="historyTable"></tbody>
+
+            </table>
+
+        </div>
+
     </div>
 
-    <!-- REPORTE -->
+    <!-- PROGRAMACION -->
 
     <div id="reportPage" class="page">
 
@@ -402,9 +486,28 @@ header h1{
 
                 <h3>Selecciona Nave</h3>
 
-                <div class="selector-group" id="warehouseSelectors"></div>
+                <div class="selector-group"
+                    id="warehouseSelectors"></div>
 
-                <h3>Selecciona Turno</h3>
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    margin-top:20px;
+                    flex-wrap:wrap;
+                    gap:20px;
+                ">
+
+                    <h3>Selecciona Turno</h3>
+
+                    <button class="add-position-btn"
+                        onclick="addPositionBlock()">
+
+                        ➕ Agregar Puesto
+
+                    </button>
+
+                </div>
 
                 <div class="selector-group">
 
@@ -426,13 +529,6 @@ header h1{
                 </div>
 
                 <div id="positionsContainer"></div>
-
-                <button class="add-position-btn"
-                    onclick="addPositionBlock()">
-
-                    ➕ Agregar Puesto
-
-                </button>
 
             </div>
 
@@ -492,35 +588,21 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const warehouses = [
-
-    "Nave 1",
-    "Nave 4",
-    "Nave 26",
-    "Nave 52",
-    "Nave 84",
-    "Nave 82",
-    "Nave 101",
-    "Nave 109",
-    "Forvia/HBPO",
-    "Mtto MHE",
-    "Falcon",
-    "Transportes"
-
+"Nave 1","Nave 4","Nave 26","Nave 52",
+"Nave 84","Nave 82","Nave 101","Nave 109",
+"Forvia/HBPO","Mtto MHE","Falcon","Transportes"
 ];
 
 const positions = [
-
-    "Operario Flexible",
-    "Tractorista",
-    "Montacarguista",
-    "Gruista",
-    "Analista",
-    "Coordinador"
-
+"Operario Flexible",
+"Tractorista",
+"Montacarguista",
+"Gruista",
+"Analista",
+"Coordinador"
 ];
 
 const incidents = [
-
 "Vacante",
 "Capacitación",
 "Ausentismo",
@@ -537,14 +619,25 @@ const incidents = [
 "Actividades especiales DHL",
 "Talleres / Cursos",
 "Sindicato"
-
 ];
 
 let selectedWarehouse="";
 let selectedShift="";
 let reports=[];
+let activeIncident=null;
 
 const positionsData=[];
+
+const today=new Date();
+
+document.getElementById("scheduledDate").value =
+    today.toISOString().split("T")[0];
+
+document.getElementById("startDate").value =
+    today.toISOString().split("T")[0];
+
+document.getElementById("endDate").value =
+    today.toISOString().split("T")[0];
 
 function updateClock(){
 
@@ -561,12 +654,6 @@ function updateClock(){
 setInterval(updateClock,1000);
 
 updateClock();
-
-document.getElementById("scheduledDate").value =
-    new Date().toISOString().split("T")[0];
-
-const dashboardBtn=document.getElementById("dashboardBtn");
-const reportBtn=document.getElementById("reportBtn");
 
 dashboardBtn.onclick=()=>{
 
@@ -590,13 +677,13 @@ reportBtn.onclick=()=>{
 
 function renderWarehouses(){
 
-    const selectorContainer =
+    const selectorContainer=
         document.getElementById("warehouseSelectors");
 
-    const filter =
+    const filter=
         document.getElementById("warehouseFilter");
 
-    filter.innerHTML =
+    filter.innerHTML=
         `<option value="all">Todas</option>`;
 
     warehouses.forEach(w=>{
@@ -909,8 +996,6 @@ async function submitReport(){
         return;
     }
 
-    const now=new Date();
-
     await addDoc(collection(db,"reports"),{
 
         username,
@@ -919,13 +1004,6 @@ async function submitReport(){
         positions:positionsData,
         total,
         scheduledDate,
-
-        createdDate:
-            now.toLocaleDateString(),
-
-        createdTime:
-            now.toLocaleTimeString(),
-
         timestamp:Date.now()
 
     });
@@ -1000,6 +1078,46 @@ const barChart=new Chart(
     }
 );
 
+function setQuickFilter(type){
+
+    const start=
+        document.getElementById("startDate");
+
+    const end=
+        document.getElementById("endDate");
+
+    const now=new Date();
+
+    let future=new Date();
+
+    if(type==="today"){
+        future=now;
+    }
+
+    if(type==="week"){
+        future.setDate(now.getDate()+7);
+    }
+
+    if(type==="month"){
+        future.setMonth(now.getMonth()+1);
+    }
+
+    if(type==="3months"){
+        future.setMonth(now.getMonth()+3);
+    }
+
+    start.value=
+        now.toISOString().split("T")[0];
+
+    end.value=
+        future.toISOString().split("T")[0];
+
+    updateDashboard(reports);
+
+}
+
+window.setQuickFilter=setQuickFilter;
+
 function filterReports(data){
 
     const warehouseFilter=
@@ -1008,65 +1126,34 @@ function filterReports(data){
     const shiftFilter=
         document.getElementById("shiftFilter").value;
 
-    const dateFilter=
-        document.getElementById("dateFilter").value;
+    const startDate=
+        new Date(document.getElementById("startDate").value);
 
-    let filtered=[...data];
+    const endDate=
+        new Date(document.getElementById("endDate").value);
 
-    const today=new Date();
-
-    filtered=filtered.filter(r=>{
+    return data.filter(r=>{
 
         const reportDate=
             new Date(r.scheduledDate+"T00:00:00");
 
-        const diffDays=
-            Math.floor(
-                (reportDate - today) /
-                (1000*60*60*24)
-            );
+        const warehouseMatch=
+            warehouseFilter==="all" ||
+            r.warehouse===warehouseFilter;
 
-        switch(dateFilter){
+        const shiftMatch=
+            shiftFilter==="all" ||
+            r.shift===shiftFilter;
 
-            case "today":
-                return diffDays===0;
+        const dateMatch=
+            reportDate>=startDate &&
+            reportDate<=endDate;
 
-            case "tomorrow":
-                return diffDays===1;
-
-            case "week":
-                return diffDays>=-2 && diffDays<=7;
-
-            case "month":
-                return diffDays>=-15 && diffDays<=30;
-
-            case "3months":
-                return diffDays>=-30 && diffDays<=90;
-
-            default:
-                return true;
-
-        }
+        return warehouseMatch &&
+            shiftMatch &&
+            dateMatch;
 
     });
-
-    if(warehouseFilter!=="all"){
-
-        filtered=filtered.filter(r=>
-            r.warehouse===warehouseFilter
-        );
-
-    }
-
-    if(shiftFilter!=="all"){
-
-        filtered=filtered.filter(r=>
-            r.shift===shiftFilter
-        );
-
-    }
-
-    return filtered;
 
 }
 
@@ -1079,7 +1166,10 @@ function renderDynamicKpis(total,incidentTotals){
 
     container.innerHTML += `
 
-        <div class="kpi">
+        <div class="kpi
+            ${activeIncident===null?"active":""}"
+
+            onclick="selectIncident(null)">
 
             <h3>Total Programado</h3>
 
@@ -1091,32 +1181,44 @@ function renderDynamicKpis(total,incidentTotals){
 
     `;
 
-    const sortedIncidents=
-        Object.entries(incidentTotals)
+    Object.entries(incidentTotals)
 
         .filter(([k,v])=>v>0)
 
-        .sort((a,b)=>b[1]-a[1]);
+        .sort((a,b)=>b[1]-a[1])
 
-    sortedIncidents.forEach(item=>{
+        .forEach(item=>{
 
-        container.innerHTML += `
+            container.innerHTML += `
 
-            <div class="kpi">
+                <div class="kpi
+                    ${activeIncident===item[0]?"active":""}"
 
-                <h3>${item[0]}</h3>
+                    onclick="selectIncident('${item[0]}')">
 
-                <div class="kpi-number">
-                    ${item[1]}
+                    <h3>${item[0]}</h3>
+
+                    <div class="kpi-number">
+                        ${item[1]}
+                    </div>
+
                 </div>
 
-            </div>
+            `;
 
-        `;
-
-    });
+        });
 
 }
+
+function selectIncident(name){
+
+    activeIncident=name;
+
+    updateDashboard(reports);
+
+}
+
+window.selectIncident=selectIncident;
 
 function updateDashboard(data){
 
@@ -1137,22 +1239,52 @@ function updateDashboard(data){
         warehouseTotals[w]=0;
     });
 
+    const history=
+        document.getElementById("historyTable");
+
+    history.innerHTML="";
+
     filtered.forEach(r=>{
 
-        total+=r.total;
-
-        warehouseTotals[r.warehouse]+=r.total;
+        let reportTotal=0;
 
         r.positions.forEach(p=>{
 
             incidents.forEach(i=>{
 
-                incidentTotals[i]+=
+                const value=
                     p.incidents[i] || 0;
+
+                incidentTotals[i]+=value;
+
+                if(
+                    activeIncident===null ||
+                    activeIncident===i
+                ){
+                    reportTotal+=value;
+                }
 
             });
 
         });
+
+        warehouseTotals[r.warehouse]+=reportTotal;
+
+        total+=reportTotal;
+
+        history.innerHTML += `
+
+            <tr>
+
+                <td>${r.scheduledDate}</td>
+                <td>${r.username}</td>
+                <td>${r.warehouse}</td>
+                <td>${r.shift}</td>
+                <td>${reportTotal}</td>
+
+            </tr>
+
+        `;
 
     });
 
@@ -1162,7 +1294,16 @@ function updateDashboard(data){
     );
 
     lineChart.data.datasets[0].data=
-        incidents.map(i=>incidentTotals[i]);
+
+        incidents.map(i=>{
+
+            if(activeIncident && activeIncident!==i){
+                return 0;
+            }
+
+            return incidentTotals[i];
+
+        });
 
     lineChart.update();
 
@@ -1200,7 +1341,11 @@ document
     .addEventListener("change",()=>updateDashboard(reports));
 
 document
-    .getElementById("dateFilter")
+    .getElementById("startDate")
+    .addEventListener("change",()=>updateDashboard(reports));
+
+document
+    .getElementById("endDate")
     .addEventListener("change",()=>updateDashboard(reports));
 
 loadReports();
