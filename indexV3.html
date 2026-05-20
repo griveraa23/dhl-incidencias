@@ -459,9 +459,255 @@ header h1{
 
 <div class="container">
 
-<!-- TODO EL RESTO DE TU HTML V7.1 VA AQUÍ EXACTAMENTE IGUAL -->
-<!-- NO LO QUITÉ PARA NO ROMPER LA RESPUESTA -->
-<!-- USA EL MISMO BODY DE DASHBOARD Y PROGRAMAR -->
+    <div class="top-buttons">
+
+        <button id="dashboardBtn" class="active">
+            📊 Dashboard
+        </button>
+
+        <button id="reportBtn">
+            📝 Programar
+        </button>
+
+        <button id="logoutBtn"
+            style="
+                background:#222;
+                color:white;
+                max-width:220px;
+            ">
+
+            🔒 Cerrar Sesión
+
+        </button>
+
+    </div>
+
+    <!-- DASHBOARD -->
+
+    <div id="dashboardPage" class="page active">
+
+        <div class="card">
+
+            <div class="filters">
+
+                <div>
+                    <label>Nave</label>
+                    <select id="warehouseFilter"></select>
+                </div>
+
+                <div>
+                    <label>Turno</label>
+                    <select id="shiftFilter">
+                        <option value="all">Todos</option>
+                        <option value="Primero">Primero</option>
+                        <option value="Segundo">Segundo</option>
+                        <option value="Tercero">Tercero</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Fecha Inicio</label>
+                    <input type="date" id="startDate">
+                </div>
+
+                <div>
+                    <label>Fecha Fin</label>
+                    <input type="date" id="endDate">
+                </div>
+
+            </div>
+
+            <div class="quick-filters">
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('today')">
+
+                    Hoy
+
+                </button>
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('week')">
+
+                    Semana
+
+                </button>
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('month')">
+
+                    Mes
+
+                </button>
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('3months')">
+
+                    3 Meses
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="kpis" id="dynamicKpis"></div>
+
+        <div class="card">
+
+            <h2>📈 Incidencias</h2>
+
+            <br>
+
+            <canvas id="lineChart"></canvas>
+
+        </div>
+
+        <div class="card">
+
+            <h2>🏭 Incidencias por Nave</h2>
+
+            <br>
+
+            <canvas id="barChart"></canvas>
+
+        </div>
+
+        <div class="card">
+
+            <h2>📚 Histórico</h2>
+
+            <br>
+
+            <table class="history-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Fecha</th>
+                        <th>Usuario</th>
+                        <th>Nave</th>
+                        <th>Turno</th>
+                        <th>Total</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="historyTable"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <!-- PROGRAMAR -->
+
+    <div id="reportPage" class="page">
+
+        <div class="report-layout">
+
+            <div class="card">
+
+                <h2>📝 Programación</h2>
+
+                <br>
+
+                <label>Usuario</label>
+
+                <input
+                    type="text"
+                    id="username"
+                    readonly
+                    style="
+                        background:#f0f0f0;
+                        cursor:not-allowed;
+                    "
+                >
+
+                <br><br>
+
+                <label>Fecha Programada</label>
+                <input type="date" id="scheduledDate">
+
+                <br><br>
+
+                <h3>Selecciona Nave</h3>
+
+                <div class="selector-group"
+                    id="warehouseSelectors"></div>
+
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    margin-top:20px;
+                    flex-wrap:wrap;
+                    gap:20px;
+                ">
+
+                    <h3>Selecciona Turno</h3>
+
+                    <button class="add-position-btn"
+                        onclick="addPositionBlock()">
+
+                        ➕ Agregar Puesto
+
+                    </button>
+
+                </div>
+
+                <div class="selector-group">
+
+                    <div class="selector shift"
+                        onclick="selectShift(this,'Primero')">
+
+                        ☀️ Primero
+
+                    </div>
+
+                    <div class="selector shift"
+                        onclick="selectShift(this,'Segundo')">
+
+                        🌤 Segundo
+
+                    </div>
+
+                    <div class="selector shift"
+                        onclick="selectShift(this,'Tercero')">
+
+                        🌙 Tercero
+
+                    </div>
+
+                </div>
+
+                <div id="positionsContainer"></div>
+
+            </div>
+
+            <div class="card">
+
+                <h2>🛒 Resumen</h2>
+
+                <br>
+
+                <div id="summary"></div>
+
+                <button class="submit-btn"
+                    onclick="submitReport()">
+
+                    🚀 Guardar Programación
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
 
