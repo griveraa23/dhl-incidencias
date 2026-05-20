@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>DHL Workforce Planning V7 FIX</title>
+<title>DHL Workforce Planning V7.1</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -136,6 +136,21 @@ header h1{
     padding:20px;
     border-radius:20px;
     border-left:8px solid var(--dhl-red);
+    cursor:pointer;
+    transition:.2s;
+}
+
+.kpi:hover{
+    transform:scale(1.02);
+}
+
+.kpi.active{
+    background:var(--dhl-red);
+    color:white;
+}
+
+.kpi.active .kpi-number{
+    color:white;
 }
 
 .kpi-number{
@@ -171,6 +186,7 @@ header h1{
     border-radius:20px;
     padding:20px;
     margin-bottom:20px;
+    border:2px solid #eee;
 }
 
 .position-header{
@@ -247,6 +263,16 @@ header h1{
     margin-top:20px;
 }
 
+.remove-btn{
+    background:#ffe1e1;
+    color:var(--dhl-red);
+    border:none;
+    padding:12px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
 .summary-item{
     display:flex;
     justify-content:space-between;
@@ -270,6 +296,7 @@ header h1{
 .history-table td{
     padding:12px;
     border-bottom:1px solid #eee;
+    text-align:left;
 }
 
 .toast{
@@ -283,6 +310,14 @@ header h1{
     display:none;
 }
 
+@media(max-width:900px){
+
+    .report-layout{
+        grid-template-columns:1fr;
+    }
+
+}
+
 </style>
 
 </head>
@@ -291,7 +326,7 @@ header h1{
 
 <header>
 
-    <h1>📦 DHL Workforce Planning V7 FIX</h1>
+    <h1>📦 DHL Workforce Planning V7.1</h1>
 
     <div class="datetime">
         <div id="date"></div>
@@ -313,6 +348,8 @@ header h1{
         </button>
 
     </div>
+
+    <!-- DASHBOARD -->
 
     <div id="dashboardPage" class="page active">
 
@@ -347,49 +384,179 @@ header h1{
 
             </div>
 
+            <div class="quick-filters">
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('today')">
+                    Hoy
+                </button>
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('week')">
+                    Semana
+                </button>
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('month')">
+                    Mes
+                </button>
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('3months')">
+                    3 Meses
+                </button>
+
+            </div>
+
         </div>
 
         <div class="kpis" id="dynamicKpis"></div>
 
         <div class="card">
-            <canvas id="lineChart"></canvas>
-        </div>
 
-        <div class="card">
-            <canvas id="barChart"></canvas>
-        </div>
-
-    </div>
-
-    <div id="reportPage" class="page">
-
-        <div class="card">
-
-            <h2>📝 Programar</h2>
+            <h2>📈 Incidencias</h2>
 
             <br>
 
-            <label>Usuario</label>
-            <input type="text" id="username">
+            <canvas id="lineChart"></canvas>
 
-            <br><br>
+        </div>
 
-            <label>Fecha Programada</label>
-            <input type="date" id="scheduledDate">
+        <div class="card">
 
-            <br><br>
+            <h2>🏭 Incidencias por Nave</h2>
 
-            <button class="submit-btn"
-                onclick="submitReport()">
+            <br>
 
-                🚀 Guardar
+            <canvas id="barChart"></canvas>
 
-            </button>
+        </div>
+
+        <div class="card">
+
+            <h2>📚 Histórico</h2>
+
+            <br>
+
+            <table class="history-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Fecha</th>
+                        <th>Usuario</th>
+                        <th>Nave</th>
+                        <th>Turno</th>
+                        <th>Total</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="historyTable"></tbody>
+
+            </table>
 
         </div>
 
     </div>
 
+    <!-- PROGRAMACION -->
+
+    <div id="reportPage" class="page">
+
+        <div class="report-layout">
+
+            <div class="card">
+
+                <h2>📝 Programación</h2>
+
+                <br>
+
+                <label>Usuario</label>
+                <input type="text" id="username">
+
+                <br><br>
+
+                <label>Fecha Programada</label>
+                <input type="date" id="scheduledDate">
+
+                <br><br>
+
+                <h3>Selecciona Nave</h3>
+
+                <div class="selector-group"
+                    id="warehouseSelectors"></div>
+
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    margin-top:20px;
+                    flex-wrap:wrap;
+                    gap:20px;
+                ">
+
+                    <h3>Selecciona Turno</h3>
+
+                    <button class="add-position-btn"
+                        onclick="addPositionBlock()">
+
+                        ➕ Agregar Puesto
+
+                    </button>
+
+                </div>
+
+                <div class="selector-group">
+
+                    <div class="selector shift"
+                        onclick="selectShift(this,'Primero')">
+                        ☀️ Primero
+                    </div>
+
+                    <div class="selector shift"
+                        onclick="selectShift(this,'Segundo')">
+                        🌤 Segundo
+                    </div>
+
+                    <div class="selector shift"
+                        onclick="selectShift(this,'Tercero')">
+                        🌙 Tercero
+                    </div>
+
+                </div>
+
+                <div id="positionsContainer"></div>
+
+            </div>
+
+            <div class="card">
+
+                <h2>🛒 Resumen</h2>
+
+                <br>
+
+                <div id="summary"></div>
+
+                <button class="submit-btn"
+                    onclick="submitReport()">
+
+                    🚀 Guardar Programación
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="toast" id="toast">
+    Programación guardada correctamente
 </div>
 
 <script type="module">
@@ -421,19 +588,47 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const warehouses = [
-"Nave 1","Nave 4","Nave 26","Nave 52"
+"Nave 1","Nave 4","Nave 26","Nave 52",
+"Nave 84","Nave 82","Nave 101","Nave 109",
+"Forvia/HBPO","Mtto MHE","Falcon","Transportes"
+];
+
+const positions = [
+"Operario Flexible",
+"Tractorista",
+"Montacarguista",
+"Gruista",
+"Analista",
+"Coordinador"
 ];
 
 const incidents = [
 "Vacante",
 "Capacitación",
 "Ausentismo",
-"Incapacidad"
+"Incapacidad",
+"Castigo",
+"Permiso sin goce",
+"Permiso con goce",
+"Vacaciones",
+"Producción",
+"Llenado de proceso",
+"Llenado de proceso (PAGADO)",
+"Actividades especiales VW",
+"Atraso ruta transporte",
+"Actividades especiales DHL",
+"Talleres / Cursos",
+"Sindicato"
 ];
 
+let selectedWarehouse="";
+let selectedShift="";
 let reports=[];
+let activeIncident=null;
 
-const today = new Date();
+const positionsData=[];
+
+const today=new Date();
 
 document.getElementById("scheduledDate").value =
     today.toISOString().split("T")[0];
@@ -446,13 +641,13 @@ document.getElementById("endDate").value =
 
 function updateClock(){
 
-    const now = new Date();
+    const now=new Date();
 
     document.getElementById("date")
-        .innerText = now.toLocaleDateString();
+        .innerText=now.toLocaleDateString();
 
     document.getElementById("time")
-        .innerText = now.toLocaleTimeString();
+        .innerText=now.toLocaleTimeString();
 
 }
 
@@ -462,70 +657,396 @@ updateClock();
 
 dashboardBtn.onclick=()=>{
 
-    dashboardPage.classList.add("active");
-    reportPage.classList.remove("active");
-
     dashboardBtn.classList.add("active");
     reportBtn.classList.remove("active");
+
+    dashboardPage.classList.add("active");
+    reportPage.classList.remove("active");
 
 };
 
 reportBtn.onclick=()=>{
 
-    reportPage.classList.add("active");
-    dashboardPage.classList.remove("active");
-
     reportBtn.classList.add("active");
     dashboardBtn.classList.remove("active");
 
+    reportPage.classList.add("active");
+    dashboardPage.classList.remove("active");
+
 };
 
-const warehouseFilter =
-    document.getElementById("warehouseFilter");
+function renderWarehouses(){
 
-warehouseFilter.innerHTML =
-    `<option value="all">Todas</option>`;
+    const selectorContainer=
+        document.getElementById("warehouseSelectors");
 
-warehouses.forEach(w=>{
+    const filter=
+        document.getElementById("warehouseFilter");
 
-    warehouseFilter.innerHTML += `
-        <option value="${w}">
-            ${w}
-        </option>
+    filter.innerHTML=
+        `<option value="all">Todas</option>`;
+
+    warehouses.forEach(w=>{
+
+        selectorContainer.innerHTML += `
+
+            <div class="selector"
+                onclick="selectWarehouse(this,'${w}')">
+
+                ${w}
+
+            </div>
+
+        `;
+
+        filter.innerHTML += `
+            <option value="${w}">
+                ${w}
+            </option>
+        `;
+
+    });
+
+}
+
+renderWarehouses();
+
+function selectWarehouse(element,name){
+
+    selectedWarehouse=name;
+
+    document
+        .querySelectorAll("#warehouseSelectors .selector")
+        .forEach(el=>el.classList.remove("active"));
+
+    element.classList.add("active");
+
+    updateSummary();
+
+}
+
+window.selectWarehouse=selectWarehouse;
+
+function selectShift(element,name){
+
+    selectedShift=name;
+
+    document
+        .querySelectorAll(".shift")
+        .forEach(el=>el.classList.remove("active"));
+
+    element.classList.add("active");
+
+    updateSummary();
+
+}
+
+window.selectShift=selectShift;
+
+function addPositionBlock(){
+
+    const id=Date.now()+Math.random();
+
+    const obj={
+        id,
+        position:"",
+        incidents:{}
+    };
+
+    incidents.forEach(i=>{
+        obj.incidents[i]=0;
+    });
+
+    positionsData.unshift(obj);
+
+    renderPositions();
+
+}
+
+window.addPositionBlock=addPositionBlock;
+
+function renderPositions(){
+
+    const container=
+        document.getElementById("positionsContainer");
+
+    container.innerHTML="";
+
+    positionsData.forEach(block=>{
+
+        let incidentsHTML="";
+
+        incidents.forEach(type=>{
+
+            incidentsHTML += `
+
+                <div class="incident-card">
+
+                    <div>${type}</div>
+
+                    <div class="counter">
+
+                        <button class="minus"
+                            onclick="changeCount('${block.id}','${type}',-1)">
+                            -
+                        </button>
+
+                        <div class="count">
+                            ${block.incidents[type]}
+                        </div>
+
+                        <button class="plus"
+                            onclick="changeCount('${block.id}','${type}',1)">
+                            +
+                        </button>
+
+                    </div>
+
+                </div>
+
+            `;
+
+        });
+
+        container.innerHTML += `
+
+            <div class="position-block">
+
+                <div class="position-header">
+
+                    <select
+                        onchange="changePosition('${block.id}',this.value)">
+
+                        <option value="">
+                            Selecciona puesto
+                        </option>
+
+                        ${positions.map(p=>`
+
+                            <option
+                                value="${p}"
+                                ${block.position===p?"selected":""}
+                            >
+                                ${p}
+                            </option>
+
+                        `).join("")}
+
+                    </select>
+
+                    <button class="remove-btn"
+                        onclick="removePosition('${block.id}')">
+
+                        ❌ Eliminar
+
+                    </button>
+
+                </div>
+
+                <div class="incidents-grid">
+
+                    ${incidentsHTML}
+
+                </div>
+
+            </div>
+
+        `;
+
+    });
+
+    updateSummary();
+
+}
+
+function changePosition(id,value){
+
+    const block=
+        positionsData.find(x=>x.id==id);
+
+    block.position=value;
+
+    updateSummary();
+
+}
+
+window.changePosition=changePosition;
+
+function changeCount(id,incident,qty){
+
+    const block=
+        positionsData.find(x=>x.id==id);
+
+    if(block.incidents[incident]+qty>=0){
+
+        block.incidents[incident]+=qty;
+
+    }
+
+    renderPositions();
+
+}
+
+window.changeCount=changeCount;
+
+function removePosition(id){
+
+    const index=
+        positionsData.findIndex(x=>x.id==id);
+
+    positionsData.splice(index,1);
+
+    renderPositions();
+
+}
+
+window.removePosition=removePosition;
+
+function updateSummary(){
+
+    const summary=
+        document.getElementById("summary");
+
+    let total=0;
+
+    let html=`
+
+        <div class="summary-item">
+            <strong>Nave</strong>
+            <span>${selectedWarehouse || "-"}</span>
+        </div>
+
+        <div class="summary-item">
+            <strong>Turno</strong>
+            <span>${selectedShift || "-"}</span>
+        </div>
+
     `;
 
-});
+    positionsData.forEach(p=>{
+
+        let subtotal=0;
+
+        incidents.forEach(i=>{
+            subtotal+=p.incidents[i];
+        });
+
+        total+=subtotal;
+
+        html+=`
+
+            <div class="summary-item">
+                <span>${p.position || "Sin puesto"}</span>
+                <strong>${subtotal}</strong>
+            </div>
+
+        `;
+
+    });
+
+    html+=`
+
+        <div class="summary-item">
+            <strong>Total</strong>
+            <strong>${total}</strong>
+        </div>
+
+    `;
+
+    summary.innerHTML=html;
+
+}
+
+addPositionBlock();
 
 async function submitReport(){
 
-    const username =
+    const username=
         document.getElementById("username").value;
 
-    const scheduledDate =
+    const scheduledDate=
         document.getElementById("scheduledDate").value;
 
-    if(username===""){
+    if(username.trim()===""){
         alert("Ingresa usuario");
+        return;
+    }
+
+    if(selectedWarehouse===""){
+        alert("Selecciona nave");
+        return;
+    }
+
+    if(selectedShift===""){
+        alert("Selecciona turno");
+        return;
+    }
+
+    const total=
+        positionsData.reduce((acc,p)=>{
+
+            return acc +
+                Object.values(p.incidents)
+                    .reduce((a,b)=>a+b,0);
+
+        },0);
+
+    if(total===0){
+        alert("Agrega incidencias");
         return;
     }
 
     await addDoc(collection(db,"reports"),{
 
         username,
+        warehouse:selectedWarehouse,
+        shift:selectedShift,
+        positions:positionsData,
+        total,
         scheduledDate,
-        warehouse:"Nave 1",
-        shift:"Primero",
-        positions:[],
-        total:1,
         timestamp:Date.now()
 
     });
 
-    alert("Guardado");
+    resetForm();
+
+    showToast();
 
 }
 
 window.submitReport=submitReport;
+
+function resetForm(){
+
+    positionsData.length=0;
+
+    addPositionBlock();
+
+    selectedWarehouse="";
+    selectedShift="";
+
+    document.getElementById("username").value="";
+
+    document
+        .querySelectorAll(".selector")
+        .forEach(el=>el.classList.remove("active"));
+
+    updateSummary();
+
+}
+
+function showToast(){
+
+    const toast=
+        document.getElementById("toast");
+
+    toast.style.display="block";
+
+    setTimeout(()=>{
+        toast.style.display="none";
+    },3000);
+
+}
 
 const lineChart=new Chart(
     document.getElementById("lineChart"),
@@ -534,7 +1055,8 @@ const lineChart=new Chart(
         data:{
             labels:incidents,
             datasets:[{
-                data:[0,0,0,0],
+                label:"Incidencias",
+                data:new Array(incidents.length).fill(0),
                 backgroundColor:"#D40511"
             }]
         }
@@ -548,12 +1070,89 @@ const barChart=new Chart(
         data:{
             labels:warehouses,
             datasets:[{
-                data:[0,0,0,0],
+                label:"Totales",
+                data:new Array(warehouses.length).fill(0),
                 backgroundColor:"#FFCC00"
             }]
         }
     }
 );
+
+function setQuickFilter(type){
+
+    const start=
+        document.getElementById("startDate");
+
+    const end=
+        document.getElementById("endDate");
+
+    const now=new Date();
+
+    let future=new Date();
+
+    if(type==="today"){
+        future=now;
+    }
+
+    if(type==="week"){
+        future.setDate(now.getDate()+7);
+    }
+
+    if(type==="month"){
+        future.setMonth(now.getMonth()+1);
+    }
+
+    if(type==="3months"){
+        future.setMonth(now.getMonth()+3);
+    }
+
+    start.value=
+        formatDate(now);
+
+    end.value=
+        formatDate(future);
+
+    updateDashboard(reports);
+
+}
+
+window.setQuickFilter=setQuickFilter;
+
+function formatDate(date){
+
+    const year=date.getFullYear();
+    const month=String(date.getMonth()+1).padStart(2,"0");
+    const day=String(date.getDate()).padStart(2,"0");
+
+    return `${year}-${month}-${day}`;
+
+}
+
+function normalizeDate(dateString){
+
+    if(!dateString) return null;
+
+    if(dateString.includes("-")){
+
+        return new Date(dateString+"T00:00:00");
+
+    }
+
+    const parts=dateString.split("/");
+
+    if(parts.length===3){
+
+        const month=parseInt(parts[0])-1;
+        const day=parseInt(parts[1]);
+        const year=parseInt(parts[2]);
+
+        return new Date(year,month,day);
+
+    }
+
+    return new Date(dateString);
+
+}
 
 function filterReports(data){
 
@@ -564,23 +1163,17 @@ function filterReports(data){
         document.getElementById("shiftFilter").value;
 
     const startDate=
-        new Date(
-            document.getElementById("startDate").value
-        );
+        normalizeDate(document.getElementById("startDate").value);
 
     const endDate=
-        new Date(
-            document.getElementById("endDate").value
-        );
+        normalizeDate(document.getElementById("endDate").value);
 
     endDate.setHours(23,59,59,999);
 
     return data.filter(r=>{
 
-        const reportDate =
-            new Date(
-                r.scheduledDate + "T00:00:00"
-            );
+        const reportDate=
+            normalizeDate(r.scheduledDate);
 
         const warehouseMatch=
             warehouseFilter==="all" ||
@@ -591,31 +1184,171 @@ function filterReports(data){
             r.shift===shiftFilter;
 
         const dateMatch=
-            reportDate >= startDate &&
-            reportDate <= endDate;
+            reportDate>=startDate &&
+            reportDate<=endDate;
 
-        return (
-            warehouseMatch &&
+        return warehouseMatch &&
             shiftMatch &&
-            dateMatch
-        );
+            dateMatch;
 
     });
 
 }
 
+function renderDynamicKpis(total,incidentTotals){
+
+    const container=
+        document.getElementById("dynamicKpis");
+
+    container.innerHTML="";
+
+    container.innerHTML += `
+
+        <div class="kpi
+            ${activeIncident===null?"active":""}"
+
+            onclick="selectIncident(null)">
+
+            <h3>Total Programado</h3>
+
+            <div class="kpi-number">
+                ${total}
+            </div>
+
+        </div>
+
+    `;
+
+    Object.entries(incidentTotals)
+
+        .filter(([k,v])=>v>0)
+
+        .sort((a,b)=>b[1]-a[1])
+
+        .forEach(item=>{
+
+            container.innerHTML += `
+
+                <div class="kpi
+                    ${activeIncident===item[0]?"active":""}"
+
+                    onclick="selectIncident('${item[0]}')">
+
+                    <h3>${item[0]}</h3>
+
+                    <div class="kpi-number">
+                        ${item[1]}
+                    </div>
+
+                </div>
+
+            `;
+
+        });
+
+}
+
+function selectIncident(name){
+
+    activeIncident=name;
+
+    updateDashboard(reports);
+
+}
+
+window.selectIncident=selectIncident;
+
 function updateDashboard(data){
 
-    const filtered =
+    const filtered=
         filterReports(data);
 
-    const totals =
-        incidents.map(()=>0);
+    let total=0;
 
-    lineChart.data.datasets[0].data =
-        totals;
+    const incidentTotals={};
+
+    incidents.forEach(i=>{
+        incidentTotals[i]=0;
+    });
+
+    const warehouseTotals={};
+
+    warehouses.forEach(w=>{
+        warehouseTotals[w]=0;
+    });
+
+    const history=
+        document.getElementById("historyTable");
+
+    history.innerHTML="";
+
+    filtered.forEach(r=>{
+
+        let reportTotal=0;
+
+        r.positions.forEach(p=>{
+
+            incidents.forEach(i=>{
+
+                const value=
+                    p.incidents[i] || 0;
+
+                incidentTotals[i]+=value;
+
+                if(
+                    activeIncident===null ||
+                    activeIncident===i
+                ){
+                    reportTotal+=value;
+                }
+
+            });
+
+        });
+
+        warehouseTotals[r.warehouse]+=reportTotal;
+
+        total+=reportTotal;
+
+        history.innerHTML += `
+
+            <tr>
+
+                <td>${r.scheduledDate}</td>
+                <td>${r.username}</td>
+                <td>${r.warehouse}</td>
+                <td>${r.shift}</td>
+                <td>${reportTotal}</td>
+
+            </tr>
+
+        `;
+
+    });
+
+    renderDynamicKpis(
+        total,
+        incidentTotals
+    );
+
+    lineChart.data.datasets[0].data=
+
+        incidents.map(i=>{
+
+            if(activeIncident && activeIncident!==i){
+                return 0;
+            }
+
+            return incidentTotals[i];
+
+        });
 
     lineChart.update();
+
+    barChart.data.datasets[0].data=
+        warehouses.map(w=>warehouseTotals[w]);
+
+    barChart.update();
 
 }
 
