@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>DHL Incidencias V4</title>
+<title>DHL Workforce Planning V5</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -14,7 +14,7 @@
 :root{
     --dhl-red:#D40511;
     --dhl-yellow:#FFCC00;
-    --bg:#f4f4f4;
+    --bg:#f5f5f5;
 }
 
 *{
@@ -43,11 +43,10 @@ header h1{
 
 .datetime{
     font-weight:bold;
-    color:#333;
 }
 
 .container{
-    max-width:1600px;
+    max-width:1700px;
     margin:auto;
     padding:20px;
 }
@@ -119,15 +118,15 @@ header h1{
 }
 
 .kpi-number{
-    font-size:38px;
+    font-size:40px;
     font-weight:bold;
     color:var(--dhl-red);
 }
 
 .selector-group{
     display:flex;
-    flex-wrap:wrap;
     gap:15px;
+    flex-wrap:wrap;
     margin:20px 0;
 }
 
@@ -148,35 +147,19 @@ header h1{
 
 .position-block{
     background:#fafafa;
-    border:2px solid #eee;
     border-radius:20px;
     padding:20px;
     margin-bottom:20px;
+    border:2px solid #eee;
 }
 
 .position-header{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:20px;
+    gap:20px;
     flex-wrap:wrap;
-    gap:15px;
-}
-
-.position-title{
-    font-size:20px;
-    font-weight:bold;
-    color:var(--dhl-red);
-}
-
-.remove-btn{
-    background:#ffe5e5;
-    color:var(--dhl-red);
-    border:none;
-    padding:10px 15px;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:bold;
+    margin-bottom:20px;
 }
 
 .incidents-grid{
@@ -187,15 +170,15 @@ header h1{
 
 .incident-card{
     background:white;
-    border-radius:15px;
     padding:15px;
+    border-radius:15px;
 }
 
 .counter{
     display:flex;
     justify-content:center;
     align-items:center;
-    gap:12px;
+    gap:15px;
     margin-top:12px;
 }
 
@@ -218,20 +201,19 @@ header h1{
 }
 
 .count{
-    font-size:24px;
+    font-size:26px;
     font-weight:bold;
 }
 
 .add-position-btn{
     width:100%;
-    padding:16px;
+    padding:18px;
     border:none;
     border-radius:15px;
     background:var(--dhl-yellow);
     font-size:18px;
     font-weight:bold;
     cursor:pointer;
-    margin-top:15px;
 }
 
 .submit-btn{
@@ -247,6 +229,16 @@ header h1{
     margin-top:20px;
 }
 
+.remove-btn{
+    background:#ffe1e1;
+    color:var(--dhl-red);
+    border:none;
+    padding:12px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
 .summary-item{
     display:flex;
     justify-content:space-between;
@@ -259,17 +251,6 @@ header h1{
     display:grid;
     grid-template-columns:2fr 1fr;
     gap:20px;
-}
-
-.history-table{
-    width:100%;
-    border-collapse:collapse;
-}
-
-.history-table th,
-.history-table td{
-    padding:12px;
-    border-bottom:1px solid #eee;
 }
 
 .toast{
@@ -299,7 +280,7 @@ header h1{
 
 <header>
 
-    <h1>📦 DHL Sistema de Incidencias V4</h1>
+    <h1>📦 DHL Workforce Planning V5</h1>
 
     <div class="datetime">
         <div id="date"></div>
@@ -317,7 +298,7 @@ header h1{
         </button>
 
         <button id="reportBtn">
-            📝 Reportar
+            📝 Programar
         </button>
 
     </div>
@@ -360,10 +341,10 @@ header h1{
                     <select id="dateFilter">
 
                         <option value="today">Hoy</option>
-                        <option value="yesterday">Ayer</option>
+                        <option value="tomorrow">Mañana</option>
                         <option value="week">Esta Semana</option>
                         <option value="month">Este Mes</option>
-                        <option value="3months">Últimos 3 Meses</option>
+                        <option value="3months">Próximos 3 Meses</option>
 
                     </select>
 
@@ -376,18 +357,18 @@ header h1{
         <div class="kpis">
 
             <div class="kpi">
-                <h3>Total Incidencias</h3>
+                <h3>Total Programado</h3>
                 <div class="kpi-number" id="kpiTotal">0</div>
+            </div>
+
+            <div class="kpi">
+                <h3>Ausentismo</h3>
+                <div class="kpi-number" id="kpiAusentismo">0</div>
             </div>
 
             <div class="kpi">
                 <h3>Vacaciones</h3>
                 <div class="kpi-number" id="kpiVacaciones">0</div>
-            </div>
-
-            <div class="kpi">
-                <h3>Incapacidades</h3>
-                <div class="kpi-number" id="kpiIncapacidad">0</div>
             </div>
 
             <div class="kpi">
@@ -427,13 +408,33 @@ header h1{
 
             <div class="card">
 
-                <h2>📝 Captura</h2>
+                <h2>📝 Programación</h2>
 
                 <br>
 
                 <label>Usuario</label>
-
                 <input type="text" id="username">
+
+                <br><br>
+
+                <label>Fecha Programada</label>
+                <input type="date" id="scheduledDate">
+
+                <br><br>
+
+                <label>Tipo de Registro</label>
+
+                <select id="recordType">
+
+                    <option value="Programado">
+                        Programado
+                    </option>
+
+                    <option value="Real">
+                        Real
+                    </option>
+
+                </select>
 
                 <br><br>
 
@@ -445,15 +446,18 @@ header h1{
 
                 <div class="selector-group">
 
-                    <div class="selector shift" onclick="selectShift(this,'Primero')">
+                    <div class="selector shift"
+                        onclick="selectShift(this,'Primero')">
                         ☀️ Primero
                     </div>
 
-                    <div class="selector shift" onclick="selectShift(this,'Segundo')">
+                    <div class="selector shift"
+                        onclick="selectShift(this,'Segundo')">
                         🌤 Segundo
                     </div>
 
-                    <div class="selector shift" onclick="selectShift(this,'Tercero')">
+                    <div class="selector shift"
+                        onclick="selectShift(this,'Tercero')">
                         🌙 Tercero
                     </div>
 
@@ -461,8 +465,11 @@ header h1{
 
                 <div id="positionsContainer"></div>
 
-                <button class="add-position-btn" onclick="addPositionBlock()">
+                <button class="add-position-btn"
+                    onclick="addPositionBlock()">
+
                     ➕ Agregar Puesto
+
                 </button>
 
             </div>
@@ -475,8 +482,11 @@ header h1{
 
                 <div id="summary"></div>
 
-                <button class="submit-btn" onclick="submitReport()">
-                    🚀 Enviar Reporte
+                <button class="submit-btn"
+                    onclick="submitReport()">
+
+                    🚀 Guardar Programación
+
                 </button>
 
             </div>
@@ -488,19 +498,21 @@ header h1{
 </div>
 
 <div class="toast" id="toast">
-    Reporte enviado correctamente
+    Programación guardada correctamente
 </div>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
     getFirestore,
     collection,
     addDoc,
     onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 
@@ -518,6 +530,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const warehouses = [
+
     "Nave 1",
     "Nave 4",
     "Nave 26",
@@ -530,26 +543,39 @@ const warehouses = [
     "Mtto MHE",
     "Falcon",
     "Transportes"
+
 ];
 
 const positions = [
+
     "Operario Flexible",
     "Tractorista",
     "Montacarguista",
     "Gruista",
     "Analista",
     "Coordinador"
+
 ];
 
 const incidents = [
-    "Vacaciones",
-    "Permiso sin goce",
-    "Permiso con goce",
-    "Incapacidad",
-    "Capacitación",
-    "Castigo",
-    "Plan de fin de semana",
-    "Vacante"
+
+"Vacante",
+"Capacitación",
+"Ausentismo",
+"Incapacidad",
+"Castigo",
+"Permiso sin goce",
+"Permiso con goce",
+"Vacaciones",
+"Producción",
+"Llenado de proceso",
+"Llenado de proceso (PAGADO)",
+"Actividades especiales VW",
+"Atraso ruta transporte",
+"Actividades especiales DHL",
+"Talleres / Cursos",
+"Sindicato"
+
 ];
 
 let selectedWarehouse="";
@@ -562,17 +588,20 @@ function updateClock(){
 
     const now=new Date();
 
-    document.getElementById("date").innerText=
-        now.toLocaleDateString();
+    document.getElementById("date")
+        .innerText=now.toLocaleDateString();
 
-    document.getElementById("time").innerText=
-        now.toLocaleTimeString();
+    document.getElementById("time")
+        .innerText=now.toLocaleTimeString();
 
 }
 
 setInterval(updateClock,1000);
 
 updateClock();
+
+document.getElementById("scheduledDate").value =
+    new Date().toISOString().split("T")[0];
 
 const dashboardBtn=document.getElementById("dashboardBtn");
 const reportBtn=document.getElementById("reportBtn");
@@ -599,27 +628,32 @@ reportBtn.onclick=()=>{
 
 function renderWarehouses(){
 
-    const container=
+    const selectorContainer =
         document.getElementById("warehouseSelectors");
 
-    const filter=
+    const filter =
         document.getElementById("warehouseFilter");
 
-    filter.innerHTML=`<option value="all">Todas</option>`;
+    filter.innerHTML =
+        `<option value="all">Todas</option>`;
 
     warehouses.forEach(w=>{
 
-        filter.innerHTML+=`<option value="${w}">${w}</option>`;
-
-        container.innerHTML+=`
+        selectorContainer.innerHTML += `
 
             <div class="selector"
-                 onclick="selectWarehouse(this,'${w}')">
+                onclick="selectWarehouse(this,'${w}')">
 
                 ${w}
 
             </div>
 
+        `;
+
+        filter.innerHTML += `
+            <option value="${w}">
+                ${w}
+            </option>
         `;
 
     });
@@ -662,19 +696,19 @@ window.selectShift=selectShift;
 
 function addPositionBlock(){
 
-    const id=Date.now();
+    const id=Date.now()+Math.random();
 
-    const data={
+    const obj={
         id,
         position:"",
         incidents:{}
     };
 
     incidents.forEach(i=>{
-        data.incidents[i]=0;
+        obj.incidents[i]=0;
     });
 
-    positionsData.push(data);
+    positionsData.push(obj);
 
     renderPositions();
 
@@ -691,15 +725,11 @@ function renderPositions(){
 
     positionsData.forEach(block=>{
 
-        const div=document.createElement("div");
-
-        div.className="position-block";
-
-        let incidentHTML="";
+        let incidentsHTML="";
 
         incidents.forEach(type=>{
 
-            incidentHTML+=`
+            incidentsHTML += `
 
                 <div class="incident-card">
 
@@ -729,43 +759,50 @@ function renderPositions(){
 
         });
 
-        div.innerHTML=`
+        container.innerHTML += `
 
-            <div class="position-header">
+            <div class="position-block">
 
-                <select onchange="changePosition('${block.id}',this.value)">
+                <div class="position-header">
 
-                    <option value="">Selecciona puesto</option>
+                    <select
+                        onchange="changePosition('${block.id}',this.value)">
 
-                    ${positions.map(p=>`
-
-                        <option
-                            value="${p}"
-                            ${block.position===p?"selected":""}
-                        >
-                            ${p}
+                        <option value="">
+                            Selecciona puesto
                         </option>
 
-                    `).join("")}
+                        ${positions.map(p=>`
 
-                </select>
+                            <option
+                                value="${p}"
+                                ${block.position===p?"selected":""}
+                            >
+                                ${p}
+                            </option>
 
-                <button class="remove-btn"
-                    onclick="removePosition('${block.id}')">
-                    ❌ Eliminar
-                </button>
+                        `).join("")}
 
-            </div>
+                    </select>
 
-            <div class="incidents-grid">
+                    <button class="remove-btn"
+                        onclick="removePosition('${block.id}')">
 
-                ${incidentHTML}
+                        ❌ Eliminar
+
+                    </button>
+
+                </div>
+
+                <div class="incidents-grid">
+
+                    ${incidentsHTML}
+
+                </div>
 
             </div>
 
         `;
-
-        container.appendChild(div);
 
     });
 
@@ -818,7 +855,8 @@ window.removePosition=removePosition;
 
 function updateSummary(){
 
-    const summary=document.getElementById("summary");
+    const summary=
+        document.getElementById("summary");
 
     let total=0;
 
@@ -877,6 +915,12 @@ async function submitReport(){
     const username=
         document.getElementById("username").value;
 
+    const scheduledDate=
+        document.getElementById("scheduledDate").value;
+
+    const recordType=
+        document.getElementById("recordType").value;
+
     if(username.trim()===""){
         alert("Ingresa usuario");
         return;
@@ -915,13 +959,16 @@ async function submitReport(){
         shift:selectedShift,
         positions:positionsData,
         total,
+        scheduledDate,
+        recordType,
 
-        date:now.toLocaleDateString(),
-        time:now.toLocaleTimeString(),
+        createdDate:
+            now.toLocaleDateString(),
 
-        timestamp:Date.now(),
+        createdTime:
+            now.toLocaleTimeString(),
 
-        isoDate:now.toISOString()
+        timestamp:Date.now()
 
     });
 
@@ -948,11 +995,14 @@ function resetForm(){
         .querySelectorAll(".selector")
         .forEach(el=>el.classList.remove("active"));
 
+    updateSummary();
+
 }
 
 function showToast(){
 
-    const toast=document.getElementById("toast");
+    const toast=
+        document.getElementById("toast");
 
     toast.style.display="block";
 
@@ -1009,38 +1059,31 @@ function filterReports(data){
 
     filtered=filtered.filter(r=>{
 
-        const reportDate=new Date(r.isoDate);
-
-        const sameDay=
-            reportDate.toDateString()===
-            today.toDateString();
-
-        const yesterday=new Date();
-        yesterday.setDate(today.getDate()-1);
-
-        const sameYesterday=
-            reportDate.toDateString()===
-            yesterday.toDateString();
+        const reportDate=
+            new Date(r.scheduledDate+"T00:00:00");
 
         const diffDays=
-            (today-reportDate)/(1000*60*60*24);
+            Math.floor(
+                (reportDate - today) /
+                (1000*60*60*24)
+            );
 
         switch(dateFilter){
 
             case "today":
-                return sameDay;
+                return diffDays===0;
 
-            case "yesterday":
-                return sameYesterday;
+            case "tomorrow":
+                return diffDays===1;
 
             case "week":
-                return diffDays<=7;
+                return diffDays>=-2 && diffDays<=7;
 
             case "month":
-                return diffDays<=30;
+                return diffDays>=-15 && diffDays<=30;
 
             case "3months":
-                return diffDays<=90;
+                return diffDays>=-30 && diffDays<=90;
 
             default:
                 return true;
@@ -1110,11 +1153,11 @@ function updateDashboard(data){
     document.getElementById("kpiTotal")
         .innerText=total;
 
+    document.getElementById("kpiAusentismo")
+        .innerText=incidentTotals["Ausentismo"];
+
     document.getElementById("kpiVacaciones")
         .innerText=incidentTotals["Vacaciones"];
-
-    document.getElementById("kpiIncapacidad")
-        .innerText=incidentTotals["Incapacidad"];
 
     document.getElementById("kpiVacantes")
         .innerText=incidentTotals["Vacante"];
