@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>DHL Incidencias V4</title>
+<title>DHL Workforce Planning V7.1</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -14,7 +14,7 @@
 :root{
     --dhl-red:#D40511;
     --dhl-yellow:#FFCC00;
-    --bg:#f4f4f4;
+    --bg:#f5f5f5;
 }
 
 *{
@@ -43,11 +43,10 @@ header h1{
 
 .datetime{
     font-weight:bold;
-    color:#333;
 }
 
 .container{
-    max-width:1600px;
+    max-width:1900px;
     margin:auto;
     padding:20px;
 }
@@ -104,6 +103,27 @@ header h1{
     border:1px solid #ccc;
 }
 
+.quick-filters{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:20px;
+}
+
+.quick-btn{
+    padding:12px 18px;
+    border:none;
+    border-radius:12px;
+    background:#eee;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.quick-btn.active{
+    background:var(--dhl-red);
+    color:white;
+}
+
 .kpis{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -116,6 +136,21 @@ header h1{
     padding:20px;
     border-radius:20px;
     border-left:8px solid var(--dhl-red);
+    cursor:pointer;
+    transition:.2s;
+}
+
+.kpi:hover{
+    transform:scale(1.02);
+}
+
+.kpi.active{
+    background:var(--dhl-red);
+    color:white;
+}
+
+.kpi.active .kpi-number{
+    color:white;
 }
 
 .kpi-number{
@@ -126,8 +161,8 @@ header h1{
 
 .selector-group{
     display:flex;
-    flex-wrap:wrap;
     gap:15px;
+    flex-wrap:wrap;
     margin:20px 0;
 }
 
@@ -148,35 +183,19 @@ header h1{
 
 .position-block{
     background:#fafafa;
-    border:2px solid #eee;
     border-radius:20px;
     padding:20px;
     margin-bottom:20px;
+    border:2px solid #eee;
 }
 
 .position-header{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:20px;
+    gap:20px;
     flex-wrap:wrap;
-    gap:15px;
-}
-
-.position-title{
-    font-size:20px;
-    font-weight:bold;
-    color:var(--dhl-red);
-}
-
-.remove-btn{
-    background:#ffe5e5;
-    color:var(--dhl-red);
-    border:none;
-    padding:10px 15px;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:bold;
+    margin-bottom:20px;
 }
 
 .incidents-grid{
@@ -187,15 +206,15 @@ header h1{
 
 .incident-card{
     background:white;
-    border-radius:15px;
     padding:15px;
+    border-radius:15px;
 }
 
 .counter{
     display:flex;
     justify-content:center;
     align-items:center;
-    gap:12px;
+    gap:15px;
     margin-top:12px;
 }
 
@@ -218,20 +237,17 @@ header h1{
 }
 
 .count{
-    font-size:24px;
+    font-size:26px;
     font-weight:bold;
 }
 
 .add-position-btn{
-    width:100%;
-    padding:16px;
+    padding:14px 20px;
     border:none;
-    border-radius:15px;
+    border-radius:12px;
     background:var(--dhl-yellow);
-    font-size:18px;
-    font-weight:bold;
     cursor:pointer;
-    margin-top:15px;
+    font-weight:bold;
 }
 
 .submit-btn{
@@ -245,6 +261,16 @@ header h1{
     font-weight:bold;
     cursor:pointer;
     margin-top:20px;
+}
+
+.remove-btn{
+    background:#ffe1e1;
+    color:var(--dhl-red);
+    border:none;
+    padding:12px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
 }
 
 .summary-item{
@@ -270,6 +296,7 @@ header h1{
 .history-table td{
     padding:12px;
     border-bottom:1px solid #eee;
+    text-align:left;
 }
 
 .toast{
@@ -299,7 +326,7 @@ header h1{
 
 <header>
 
-    <h1>📦 DHL Sistema de Incidencias V4</h1>
+    <h1>📦 DHL Workforce Planning V7.1</h1>
 
     <div class="datetime">
         <div id="date"></div>
@@ -317,7 +344,7 @@ header h1{
         </button>
 
         <button id="reportBtn">
-            📝 Reportar
+            📝 Programar
         </button>
 
     </div>
@@ -331,71 +358,59 @@ header h1{
             <div class="filters">
 
                 <div>
-
                     <label>Nave</label>
-
                     <select id="warehouseFilter"></select>
-
                 </div>
 
                 <div>
-
                     <label>Turno</label>
-
                     <select id="shiftFilter">
-
                         <option value="all">Todos</option>
                         <option value="Primero">Primero</option>
                         <option value="Segundo">Segundo</option>
                         <option value="Tercero">Tercero</option>
-
                     </select>
-
                 </div>
 
                 <div>
+                    <label>Fecha Inicio</label>
+                    <input type="date" id="startDate">
+                </div>
 
-                    <label>Periodo</label>
-
-                    <select id="dateFilter">
-
-                        <option value="today">Hoy</option>
-                        <option value="yesterday">Ayer</option>
-                        <option value="week">Esta Semana</option>
-                        <option value="month">Este Mes</option>
-                        <option value="3months">Últimos 3 Meses</option>
-
-                    </select>
-
+                <div>
+                    <label>Fecha Fin</label>
+                    <input type="date" id="endDate">
                 </div>
 
             </div>
 
+            <div class="quick-filters">
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('today')">
+                    Hoy
+                </button>
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('week')">
+                    Semana
+                </button>
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('month')">
+                    Mes
+                </button>
+
+                <button class="quick-btn"
+                    onclick="setQuickFilter('3months')">
+                    3 Meses
+                </button>
+
+            </div>
+
         </div>
 
-        <div class="kpis">
-
-            <div class="kpi">
-                <h3>Total Incidencias</h3>
-                <div class="kpi-number" id="kpiTotal">0</div>
-            </div>
-
-            <div class="kpi">
-                <h3>Vacaciones</h3>
-                <div class="kpi-number" id="kpiVacaciones">0</div>
-            </div>
-
-            <div class="kpi">
-                <h3>Incapacidades</h3>
-                <div class="kpi-number" id="kpiIncapacidad">0</div>
-            </div>
-
-            <div class="kpi">
-                <h3>Vacantes</h3>
-                <div class="kpi-number" id="kpiVacantes">0</div>
-            </div>
-
-        </div>
+        <div class="kpis" id="dynamicKpis"></div>
 
         <div class="card">
 
@@ -417,9 +432,37 @@ header h1{
 
         </div>
 
+        <div class="card">
+
+            <h2>📚 Histórico</h2>
+
+            <br>
+
+            <table class="history-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Fecha</th>
+                        <th>Usuario</th>
+                        <th>Nave</th>
+                        <th>Turno</th>
+                        <th>Total</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="historyTable"></tbody>
+
+            </table>
+
+        </div>
+
     </div>
 
-    <!-- REPORTE -->
+    <!-- PROGRAMACION -->
 
     <div id="reportPage" class="page">
 
@@ -427,43 +470,65 @@ header h1{
 
             <div class="card">
 
-                <h2>📝 Captura</h2>
+                <h2>📝 Programación</h2>
 
                 <br>
 
                 <label>Usuario</label>
-
                 <input type="text" id="username">
+
+                <br><br>
+
+                <label>Fecha Programada</label>
+                <input type="date" id="scheduledDate">
 
                 <br><br>
 
                 <h3>Selecciona Nave</h3>
 
-                <div class="selector-group" id="warehouseSelectors"></div>
+                <div class="selector-group"
+                    id="warehouseSelectors"></div>
 
-                <h3>Selecciona Turno</h3>
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    margin-top:20px;
+                    flex-wrap:wrap;
+                    gap:20px;
+                ">
+
+                    <h3>Selecciona Turno</h3>
+
+                    <button class="add-position-btn"
+                        onclick="addPositionBlock()">
+
+                        ➕ Agregar Puesto
+
+                    </button>
+
+                </div>
 
                 <div class="selector-group">
 
-                    <div class="selector shift" onclick="selectShift(this,'Primero')">
+                    <div class="selector shift"
+                        onclick="selectShift(this,'Primero')">
                         ☀️ Primero
                     </div>
 
-                    <div class="selector shift" onclick="selectShift(this,'Segundo')">
+                    <div class="selector shift"
+                        onclick="selectShift(this,'Segundo')">
                         🌤 Segundo
                     </div>
 
-                    <div class="selector shift" onclick="selectShift(this,'Tercero')">
+                    <div class="selector shift"
+                        onclick="selectShift(this,'Tercero')">
                         🌙 Tercero
                     </div>
 
                 </div>
 
                 <div id="positionsContainer"></div>
-
-                <button class="add-position-btn" onclick="addPositionBlock()">
-                    ➕ Agregar Puesto
-                </button>
 
             </div>
 
@@ -475,8 +540,11 @@ header h1{
 
                 <div id="summary"></div>
 
-                <button class="submit-btn" onclick="submitReport()">
-                    🚀 Enviar Reporte
+                <button class="submit-btn"
+                    onclick="submitReport()">
+
+                    🚀 Guardar Programación
+
                 </button>
 
             </div>
@@ -488,19 +556,21 @@ header h1{
 </div>
 
 <div class="toast" id="toast">
-    Reporte enviado correctamente
+    Programación guardada correctamente
 </div>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
     getFirestore,
     collection,
     addDoc,
     onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 
@@ -518,64 +588,72 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const warehouses = [
-    "Nave 1",
-    "Nave 4",
-    "Nave 26",
-    "Nave 52",
-    "Nave 84",
-    "Nave 82",
-    "Nave 101",
-    "Nave 109",
-    "Forvia/HBPO",
-    "Mtto MHE",
-    "Falcon",
-    "Transportes"
+"Nave 1","Nave 4","Nave 26","Nave 52",
+"Nave 84","Nave 82","Nave 101","Nave 109",
+"Forvia/HBPO","Mtto MHE","Falcon","Transportes"
 ];
 
 const positions = [
-    "Operario Flexible",
-    "Tractorista",
-    "Montacarguista",
-    "Gruista",
-    "Analista",
-    "Coordinador"
+"Operario Flexible",
+"Tractorista",
+"Montacarguista",
+"Gruista",
+"Analista",
+"Coordinador"
 ];
 
 const incidents = [
-    "Vacaciones",
-    "Permiso sin goce",
-    "Permiso con goce",
-    "Incapacidad",
-    "Capacitación",
-    "Castigo",
-    "Plan de fin de semana",
-    "Vacante"
+"Vacante",
+"Capacitación",
+"Ausentismo",
+"Incapacidad",
+"Castigo",
+"Permiso sin goce",
+"Permiso con goce",
+"Vacaciones",
+"Producción",
+"Llenado de proceso",
+"Llenado de proceso (PAGADO)",
+"Actividades especiales VW",
+"Atraso ruta transporte",
+"Actividades especiales DHL",
+"Talleres / Cursos",
+"Sindicato"
 ];
 
 let selectedWarehouse="";
 let selectedShift="";
 let reports=[];
+let activeIncident=null;
 
 const positionsData=[];
+
+const today=new Date();
+
+document.getElementById("scheduledDate").value =
+    today.toISOString().split("T")[0];
+
+document.getElementById("startDate").value =
+    today.toISOString().split("T")[0];
+
+document.getElementById("endDate").value =
+    today.toISOString().split("T")[0];
 
 function updateClock(){
 
     const now=new Date();
 
-    document.getElementById("date").innerText=
-        now.toLocaleDateString();
+    document.getElementById("date")
+        .innerText=now.toLocaleDateString();
 
-    document.getElementById("time").innerText=
-        now.toLocaleTimeString();
+    document.getElementById("time")
+        .innerText=now.toLocaleTimeString();
 
 }
 
 setInterval(updateClock,1000);
 
 updateClock();
-
-const dashboardBtn=document.getElementById("dashboardBtn");
-const reportBtn=document.getElementById("reportBtn");
 
 dashboardBtn.onclick=()=>{
 
@@ -599,27 +677,32 @@ reportBtn.onclick=()=>{
 
 function renderWarehouses(){
 
-    const container=
+    const selectorContainer=
         document.getElementById("warehouseSelectors");
 
     const filter=
         document.getElementById("warehouseFilter");
 
-    filter.innerHTML=`<option value="all">Todas</option>`;
+    filter.innerHTML=
+        `<option value="all">Todas</option>`;
 
     warehouses.forEach(w=>{
 
-        filter.innerHTML+=`<option value="${w}">${w}</option>`;
-
-        container.innerHTML+=`
+        selectorContainer.innerHTML += `
 
             <div class="selector"
-                 onclick="selectWarehouse(this,'${w}')">
+                onclick="selectWarehouse(this,'${w}')">
 
                 ${w}
 
             </div>
 
+        `;
+
+        filter.innerHTML += `
+            <option value="${w}">
+                ${w}
+            </option>
         `;
 
     });
@@ -662,19 +745,19 @@ window.selectShift=selectShift;
 
 function addPositionBlock(){
 
-    const id=Date.now();
+    const id=Date.now()+Math.random();
 
-    const data={
+    const obj={
         id,
         position:"",
         incidents:{}
     };
 
     incidents.forEach(i=>{
-        data.incidents[i]=0;
+        obj.incidents[i]=0;
     });
 
-    positionsData.push(data);
+    positionsData.unshift(obj);
 
     renderPositions();
 
@@ -691,15 +774,11 @@ function renderPositions(){
 
     positionsData.forEach(block=>{
 
-        const div=document.createElement("div");
-
-        div.className="position-block";
-
-        let incidentHTML="";
+        let incidentsHTML="";
 
         incidents.forEach(type=>{
 
-            incidentHTML+=`
+            incidentsHTML += `
 
                 <div class="incident-card">
 
@@ -729,43 +808,50 @@ function renderPositions(){
 
         });
 
-        div.innerHTML=`
+        container.innerHTML += `
 
-            <div class="position-header">
+            <div class="position-block">
 
-                <select onchange="changePosition('${block.id}',this.value)">
+                <div class="position-header">
 
-                    <option value="">Selecciona puesto</option>
+                    <select
+                        onchange="changePosition('${block.id}',this.value)">
 
-                    ${positions.map(p=>`
-
-                        <option
-                            value="${p}"
-                            ${block.position===p?"selected":""}
-                        >
-                            ${p}
+                        <option value="">
+                            Selecciona puesto
                         </option>
 
-                    `).join("")}
+                        ${positions.map(p=>`
 
-                </select>
+                            <option
+                                value="${p}"
+                                ${block.position===p?"selected":""}
+                            >
+                                ${p}
+                            </option>
 
-                <button class="remove-btn"
-                    onclick="removePosition('${block.id}')">
-                    ❌ Eliminar
-                </button>
+                        `).join("")}
 
-            </div>
+                    </select>
 
-            <div class="incidents-grid">
+                    <button class="remove-btn"
+                        onclick="removePosition('${block.id}')">
 
-                ${incidentHTML}
+                        ❌ Eliminar
+
+                    </button>
+
+                </div>
+
+                <div class="incidents-grid">
+
+                    ${incidentsHTML}
+
+                </div>
 
             </div>
 
         `;
-
-        container.appendChild(div);
 
     });
 
@@ -818,7 +904,8 @@ window.removePosition=removePosition;
 
 function updateSummary(){
 
-    const summary=document.getElementById("summary");
+    const summary=
+        document.getElementById("summary");
 
     let total=0;
 
@@ -877,6 +964,9 @@ async function submitReport(){
     const username=
         document.getElementById("username").value;
 
+    const scheduledDate=
+        document.getElementById("scheduledDate").value;
+
     if(username.trim()===""){
         alert("Ingresa usuario");
         return;
@@ -906,8 +996,6 @@ async function submitReport(){
         return;
     }
 
-    const now=new Date();
-
     await addDoc(collection(db,"reports"),{
 
         username,
@@ -915,13 +1003,8 @@ async function submitReport(){
         shift:selectedShift,
         positions:positionsData,
         total,
-
-        date:now.toLocaleDateString(),
-        time:now.toLocaleTimeString(),
-
-        timestamp:Date.now(),
-
-        isoDate:now.toISOString()
+        scheduledDate,
+        timestamp:Date.now()
 
     });
 
@@ -948,11 +1031,14 @@ function resetForm(){
         .querySelectorAll(".selector")
         .forEach(el=>el.classList.remove("active"));
 
+    updateSummary();
+
 }
 
 function showToast(){
 
-    const toast=document.getElementById("toast");
+    const toast=
+        document.getElementById("toast");
 
     toast.style.display="block";
 
@@ -992,6 +1078,82 @@ const barChart=new Chart(
     }
 );
 
+function setQuickFilter(type){
+
+    const start=
+        document.getElementById("startDate");
+
+    const end=
+        document.getElementById("endDate");
+
+    const now=new Date();
+
+    let future=new Date();
+
+    if(type==="today"){
+        future=now;
+    }
+
+    if(type==="week"){
+        future.setDate(now.getDate()+7);
+    }
+
+    if(type==="month"){
+        future.setMonth(now.getMonth()+1);
+    }
+
+    if(type==="3months"){
+        future.setMonth(now.getMonth()+3);
+    }
+
+    start.value=
+        formatDate(now);
+
+    end.value=
+        formatDate(future);
+
+    updateDashboard(reports);
+
+}
+
+window.setQuickFilter=setQuickFilter;
+
+function formatDate(date){
+
+    const year=date.getFullYear();
+    const month=String(date.getMonth()+1).padStart(2,"0");
+    const day=String(date.getDate()).padStart(2,"0");
+
+    return `${year}-${month}-${day}`;
+
+}
+
+function normalizeDate(dateString){
+
+    if(!dateString) return null;
+
+    if(dateString.includes("-")){
+
+        return new Date(dateString+"T00:00:00");
+
+    }
+
+    const parts=dateString.split("/");
+
+    if(parts.length===3){
+
+        const month=parseInt(parts[0])-1;
+        const day=parseInt(parts[1]);
+        const year=parseInt(parts[2]);
+
+        return new Date(year,month,day);
+
+    }
+
+    return new Date(dateString);
+
+}
+
 function filterReports(data){
 
     const warehouseFilter=
@@ -1000,74 +1162,101 @@ function filterReports(data){
     const shiftFilter=
         document.getElementById("shiftFilter").value;
 
-    const dateFilter=
-        document.getElementById("dateFilter").value;
+    const startDate=
+        normalizeDate(document.getElementById("startDate").value);
 
-    let filtered=[...data];
+    const endDate=
+        normalizeDate(document.getElementById("endDate").value);
 
-    const today=new Date();
+    endDate.setHours(23,59,59,999);
 
-    filtered=filtered.filter(r=>{
+    return data.filter(r=>{
 
-        const reportDate=new Date(r.isoDate);
+        const reportDate=
+            normalizeDate(r.scheduledDate);
 
-        const sameDay=
-            reportDate.toDateString()===
-            today.toDateString();
+        const warehouseMatch=
+            warehouseFilter==="all" ||
+            r.warehouse===warehouseFilter;
 
-        const yesterday=new Date();
-        yesterday.setDate(today.getDate()-1);
+        const shiftMatch=
+            shiftFilter==="all" ||
+            r.shift===shiftFilter;
 
-        const sameYesterday=
-            reportDate.toDateString()===
-            yesterday.toDateString();
+        const dateMatch=
+            reportDate>=startDate &&
+            reportDate<=endDate;
 
-        const diffDays=
-            (today-reportDate)/(1000*60*60*24);
-
-        switch(dateFilter){
-
-            case "today":
-                return sameDay;
-
-            case "yesterday":
-                return sameYesterday;
-
-            case "week":
-                return diffDays<=7;
-
-            case "month":
-                return diffDays<=30;
-
-            case "3months":
-                return diffDays<=90;
-
-            default:
-                return true;
-
-        }
+        return warehouseMatch &&
+            shiftMatch &&
+            dateMatch;
 
     });
 
-    if(warehouseFilter!=="all"){
+}
 
-        filtered=filtered.filter(r=>
-            r.warehouse===warehouseFilter
-        );
+function renderDynamicKpis(total,incidentTotals){
 
-    }
+    const container=
+        document.getElementById("dynamicKpis");
 
-    if(shiftFilter!=="all"){
+    container.innerHTML="";
 
-        filtered=filtered.filter(r=>
-            r.shift===shiftFilter
-        );
+    container.innerHTML += `
 
-    }
+        <div class="kpi
+            ${activeIncident===null?"active":""}"
 
-    return filtered;
+            onclick="selectIncident(null)">
+
+            <h3>Total Programado</h3>
+
+            <div class="kpi-number">
+                ${total}
+            </div>
+
+        </div>
+
+    `;
+
+    Object.entries(incidentTotals)
+
+        .filter(([k,v])=>v>0)
+
+        .sort((a,b)=>b[1]-a[1])
+
+        .forEach(item=>{
+
+            container.innerHTML += `
+
+                <div class="kpi
+                    ${activeIncident===item[0]?"active":""}"
+
+                    onclick="selectIncident('${item[0]}')">
+
+                    <h3>${item[0]}</h3>
+
+                    <div class="kpi-number">
+                        ${item[1]}
+                    </div>
+
+                </div>
+
+            `;
+
+        });
 
 }
+
+function selectIncident(name){
+
+    activeIncident=name;
+
+    updateDashboard(reports);
+
+}
+
+window.selectIncident=selectIncident;
 
 function updateDashboard(data){
 
@@ -1088,39 +1277,71 @@ function updateDashboard(data){
         warehouseTotals[w]=0;
     });
 
+    const history=
+        document.getElementById("historyTable");
+
+    history.innerHTML="";
+
     filtered.forEach(r=>{
 
-        total+=r.total;
-
-        warehouseTotals[r.warehouse]+=r.total;
+        let reportTotal=0;
 
         r.positions.forEach(p=>{
 
             incidents.forEach(i=>{
 
-                incidentTotals[i]+=
+                const value=
                     p.incidents[i] || 0;
+
+                incidentTotals[i]+=value;
+
+                if(
+                    activeIncident===null ||
+                    activeIncident===i
+                ){
+                    reportTotal+=value;
+                }
 
             });
 
         });
 
+        warehouseTotals[r.warehouse]+=reportTotal;
+
+        total+=reportTotal;
+
+        history.innerHTML += `
+
+            <tr>
+
+                <td>${r.scheduledDate}</td>
+                <td>${r.username}</td>
+                <td>${r.warehouse}</td>
+                <td>${r.shift}</td>
+                <td>${reportTotal}</td>
+
+            </tr>
+
+        `;
+
     });
 
-    document.getElementById("kpiTotal")
-        .innerText=total;
-
-    document.getElementById("kpiVacaciones")
-        .innerText=incidentTotals["Vacaciones"];
-
-    document.getElementById("kpiIncapacidad")
-        .innerText=incidentTotals["Incapacidad"];
-
-    document.getElementById("kpiVacantes")
-        .innerText=incidentTotals["Vacante"];
+    renderDynamicKpis(
+        total,
+        incidentTotals
+    );
 
     lineChart.data.datasets[0].data=
-        incidents.map(i=>incidentTotals[i]);
+
+        incidents.map(i=>{
+
+            if(activeIncident && activeIncident!==i){
+                return 0;
+            }
+
+            return incidentTotals[i];
+
+        });
 
     lineChart.update();
 
@@ -1158,7 +1379,11 @@ document
     .addEventListener("change",()=>updateDashboard(reports));
 
 document
-    .getElementById("dateFilter")
+    .getElementById("startDate")
+    .addEventListener("change",()=>updateDashboard(reports));
+
+document
+    .getElementById("endDate")
     .addEventListener("change",()=>updateDashboard(reports));
 
 loadReports();
