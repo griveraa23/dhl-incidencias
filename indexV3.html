@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>DHL Workforce Planning V5</title>
+<title>DHL Workforce Planning V6</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -46,7 +46,7 @@ header h1{
 }
 
 .container{
-    max-width:1700px;
+    max-width:1800px;
     margin:auto;
     padding:20px;
 }
@@ -280,7 +280,7 @@ header h1{
 
 <header>
 
-    <h1>📦 DHL Workforce Planning V5</h1>
+    <h1>📦 DHL Workforce Planning V6</h1>
 
     <div class="datetime">
         <div id="date"></div>
@@ -354,29 +354,7 @@ header h1{
 
         </div>
 
-        <div class="kpis">
-
-            <div class="kpi">
-                <h3>Total Programado</h3>
-                <div class="kpi-number" id="kpiTotal">0</div>
-            </div>
-
-            <div class="kpi">
-                <h3>Ausentismo</h3>
-                <div class="kpi-number" id="kpiAusentismo">0</div>
-            </div>
-
-            <div class="kpi">
-                <h3>Vacaciones</h3>
-                <div class="kpi-number" id="kpiVacaciones">0</div>
-            </div>
-
-            <div class="kpi">
-                <h3>Vacantes</h3>
-                <div class="kpi-number" id="kpiVacantes">0</div>
-            </div>
-
-        </div>
+        <div class="kpis" id="dynamicKpis"></div>
 
         <div class="card">
 
@@ -419,22 +397,6 @@ header h1{
 
                 <label>Fecha Programada</label>
                 <input type="date" id="scheduledDate">
-
-                <br><br>
-
-                <label>Tipo de Registro</label>
-
-                <select id="recordType">
-
-                    <option value="Programado">
-                        Programado
-                    </option>
-
-                    <option value="Real">
-                        Real
-                    </option>
-
-                </select>
 
                 <br><br>
 
@@ -708,7 +670,7 @@ function addPositionBlock(){
         obj.incidents[i]=0;
     });
 
-    positionsData.push(obj);
+    positionsData.unshift(obj);
 
     renderPositions();
 
@@ -918,9 +880,6 @@ async function submitReport(){
     const scheduledDate=
         document.getElementById("scheduledDate").value;
 
-    const recordType=
-        document.getElementById("recordType").value;
-
     if(username.trim()===""){
         alert("Ingresa usuario");
         return;
@@ -960,7 +919,6 @@ async function submitReport(){
         positions:positionsData,
         total,
         scheduledDate,
-        recordType,
 
         createdDate:
             now.toLocaleDateString(),
@@ -1112,6 +1070,54 @@ function filterReports(data){
 
 }
 
+function renderDynamicKpis(total,incidentTotals){
+
+    const container=
+        document.getElementById("dynamicKpis");
+
+    container.innerHTML="";
+
+    container.innerHTML += `
+
+        <div class="kpi">
+
+            <h3>Total Programado</h3>
+
+            <div class="kpi-number">
+                ${total}
+            </div>
+
+        </div>
+
+    `;
+
+    const sortedIncidents=
+        Object.entries(incidentTotals)
+
+        .filter(([k,v])=>v>0)
+
+        .sort((a,b)=>b[1]-a[1]);
+
+    sortedIncidents.forEach(item=>{
+
+        container.innerHTML += `
+
+            <div class="kpi">
+
+                <h3>${item[0]}</h3>
+
+                <div class="kpi-number">
+                    ${item[1]}
+                </div>
+
+            </div>
+
+        `;
+
+    });
+
+}
+
 function updateDashboard(data){
 
     const filtered=
@@ -1150,17 +1156,10 @@ function updateDashboard(data){
 
     });
 
-    document.getElementById("kpiTotal")
-        .innerText=total;
-
-    document.getElementById("kpiAusentismo")
-        .innerText=incidentTotals["Ausentismo"];
-
-    document.getElementById("kpiVacaciones")
-        .innerText=incidentTotals["Vacaciones"];
-
-    document.getElementById("kpiVacantes")
-        .innerText=incidentTotals["Vacante"];
+    renderDynamicKpis(
+        total,
+        incidentTotals
+    );
 
     lineChart.data.datasets[0].data=
         incidents.map(i=>incidentTotals[i]);
