@@ -360,6 +360,27 @@ header h1{
     gap:20px;
 }
 
+.charts-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    margin-bottom:20px;
+}
+
+.chart-card{
+    background:white;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+    min-height:420px;
+}
+
+.chart-container{
+    position:relative;
+    height:320px;
+    width:100%;
+}    
+    
 .history-table{
     width:100%;
     border-collapse:collapse;
@@ -389,8 +410,11 @@ header h1{
         grid-template-columns:1fr;
     }
 
-}
+    .charts-grid{
+        grid-template-columns:1fr;
+    }
 
+}
 </style>
 
 </head>
@@ -542,25 +566,57 @@ header h1{
 
         <div class="kpis" id="dynamicKpis"></div>
 
-        <div class="card">
+        <div class="charts-grid">
 
-            <h2>📈 Incidencias</h2>
+    <div class="chart-card">
 
-            <br>
+        <h2>📈 Incidencias</h2>
 
+        <br>
+
+        <div class="chart-container">
             <canvas id="lineChart"></canvas>
-
         </div>
 
-        <div class="card">
+    </div>
 
-            <h2>🏭 Incidencias por Nave</h2>
+    <div class="chart-card">
 
-            <br>
+        <h2>🏭 Incidencias por Nave</h2>
 
+        <br>
+
+        <div class="chart-container">
             <canvas id="barChart"></canvas>
-
         </div>
+
+    </div>
+
+    <div class="chart-card">
+
+        <h2>💰 PAY</h2>
+
+        <br>
+
+        <div class="chart-container">
+            <canvas id="payChart"></canvas>
+        </div>
+
+    </div>
+
+    <div class="chart-card">
+
+        <h2>🔥 Tendencia</h2>
+
+        <br>
+
+        <div class="chart-container">
+            <canvas id="trendChart"></canvas>
+        </div>
+
+    </div>
+
+</div>
 
         <div class="card">
 
