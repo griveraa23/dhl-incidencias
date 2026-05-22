@@ -879,7 +879,9 @@ import {
     collection,
     addDoc,
     onSnapshot,
-    getDocs
+    getDocs,
+    setDoc,
+    doc
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -1163,6 +1165,8 @@ reportBtn.onclick=()=>{
     reportPage.classList.remove("active");
 
     usersPage.classList.add("active");
+    
+        renderUsersTable();    
 
 };
 
@@ -2067,6 +2071,97 @@ trendChart.update();
 
 }
 
+async function createUser(){
+
+    try{
+
+        const name =
+            document.getElementById("newUserName").value;
+
+        const employeeId =
+            document.getElementById("newEmployeeId").value;
+
+        const password =
+            document.getElementById("newPassword").value;
+
+        const role =
+            document.getElementById("newUserRole").value;
+
+        if(
+            name.trim()==="" ||
+            employeeId.trim()==="" ||
+            password.trim()===""
+        ){
+            alert("Completa todos los campos");
+            return;
+        }
+
+        await setDoc(
+            doc(db,"users",employeeId),
+            {
+                employeeId,
+                password,
+                name,
+                role,
+                active:true,
+                warehouses:[]
+            }
+        );
+
+        alert("Usuario creado correctamente");
+
+        document.getElementById("newUserName").value="";
+        document.getElementById("newEmployeeId").value="";
+        document.getElementById("newPassword").value="";
+
+        await loadUsers();
+
+        renderUsersTable();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Error al crear usuario");
+
+    }
+
+}
+
+window.createUser=createUser;
+
+function renderUsersTable(){
+
+    const table =
+        document.getElementById("usersTable");
+
+    table.innerHTML="";
+
+    users.forEach(user=>{
+
+        table.innerHTML += `
+
+            <tr>
+
+                <td>${user.name}</td>
+
+                <td>${user.employeeId}</td>
+
+                <td>${user.role}</td>
+
+                <td>
+                    ${user.active ? "✅" : "❌"}
+                </td>
+
+            </tr>
+
+        `;
+
+    });
+
+}
+    
+    
 function loadReports(){
 
     onSnapshot(collection(db,"reports"),snapshot=>{
