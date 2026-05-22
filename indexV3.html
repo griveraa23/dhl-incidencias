@@ -1401,14 +1401,36 @@ function showToast(){
 const lineChart=new Chart(
     document.getElementById("lineChart"),
     {
-        type:"bar",
+        type:"line",
+
         data:{
             labels:incidents,
+
             datasets:[{
                 label:"Incidencias",
                 data:new Array(incidents.length).fill(0),
-                backgroundColor:"#D40511"
+                borderColor:"#D40511",
+                backgroundColor:"rgba(212,5,17,0.2)",
+                fill:true,
+                tension:0.4,
+                pointRadius:5,
+                pointHoverRadius:7
             }]
+        },
+
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+
+            scales:{
+                y:{
+                    beginAtZero:true,
+                    ticks:{
+                        precision:0,
+                        stepSize:1
+                    }
+                }
+            }
         }
     }
 );
