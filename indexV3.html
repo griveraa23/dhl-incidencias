@@ -1454,6 +1454,74 @@ const barChart=new Chart(
     }
 );
 
+    const payChart=new Chart(
+    document.getElementById("payChart"),
+    {
+        type:"doughnut",
+
+        data:{
+            labels:[
+                "Pagado",
+                "No Pagado"
+            ],
+
+            datasets:[{
+                data:[0,0],
+
+                backgroundColor:[
+                    "#D40511",
+                    "#FFCC00"
+                ]
+            }]
+        },
+
+        options:{
+            responsive:true,
+            maintainAspectRatio:false
+        }
+    }
+);
+
+const trendChart=new Chart(
+    document.getElementById("trendChart"),
+    {
+        type:"line",
+
+        data:{
+            labels:[],
+
+            datasets:[{
+                label:"Tendencia",
+
+                data:[],
+
+                borderColor:"#D40511",
+
+                backgroundColor:"rgba(212,5,17,0.2)",
+
+                fill:true,
+
+                tension:0.4
+            }]
+        },
+
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+
+            scales:{
+                y:{
+                    beginAtZero:true,
+                    ticks:{
+                        precision:0,
+                        stepSize:1
+                    }
+                }
+            }
+        }
+    }
+);
+
 function setQuickFilter(type){
 
     const start=
@@ -1710,6 +1778,11 @@ function updateDashboard(data){
         warehouseTotals[w]=0;
     });
 
+    let paidTotal=0;
+let unpaidTotal=0;
+
+const trendTotals={};
+
     const history=
         document.getElementById("historyTable");
 
@@ -1724,16 +1797,34 @@ function updateDashboard(data){
             incidents.forEach(i=>{
 
                 const value=
-                    p.incidents[i] || 0;
+    p.incidents[i] || 0;
 
-                incidentTotals[i]+=value;
+incidentTotals[i]+=value;
 
-                if(
-                    activeIncident===null ||
-                    activeIncident===i
-                ){
-                    reportTotal+=value;
-                }
+/* PAGADOS */
+
+if(
+    i==="Vacaciones" ||
+    i==="Permiso con goce" ||
+    i==="Llenado de proceso (PAGADO)"
+){
+
+    paidTotal+=value;
+
+}else{
+
+    unpaidTotal+=value;
+
+}
+
+/* KPI ACTIVO */
+
+if(
+    activeIncident===null ||
+    activeIncident===i
+){
+    reportTotal+=value;
+}
 
             });
 
@@ -1741,7 +1832,15 @@ function updateDashboard(data){
 
         warehouseTotals[r.warehouse]+=reportTotal;
 
-        total+=reportTotal;
+total+=reportTotal;
+
+/* TENDENCIA */
+
+if(!trendTotals[r.scheduledDate]){
+    trendTotals[r.scheduledDate]=0;
+}
+
+trendTotals[r.scheduledDate]+=reportTotal;
 
         history.innerHTML += `
 
@@ -1782,6 +1881,31 @@ function updateDashboard(data){
         warehouses.map(w=>warehouseTotals[w]);
 
     barChart.update();
+
+    /* PAY */
+
+payChart.data.datasets[0].data=[
+    paidTotal,
+    unpaidTotal
+];
+
+payChart.update();
+
+/* TENDENCIA */
+
+const orderedDates=
+    Object.keys(trendTotals).sort();
+
+trendChart.data.labels=
+    orderedDates;
+
+trendChart.data.datasets[0].data=
+
+    orderedDates.map(d=>
+        trendTotals[d]
+    );
+
+trendChart.update();
 
 }
 
