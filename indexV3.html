@@ -671,7 +671,92 @@ header h1{
         </div>
 
     </div>
+<!-- USUARIOS -->
 
+<div id="usersPage" class="page">
+
+    <div class="card">
+
+        <h2>👥 Administración de Usuarios</h2>
+
+        <br>
+
+        <div class="filters">
+
+            <div>
+                <label>Nombre</label>
+                <input type="text" id="newUserName">
+            </div>
+
+            <div>
+                <label>Employee ID</label>
+                <input type="text" id="newEmployeeId">
+            </div>
+
+            <div>
+                <label>Password</label>
+                <input type="text" id="newPassword">
+            </div>
+
+            <div>
+                <label>Rol</label>
+
+                <select id="newUserRole">
+
+                    <option value="supervisor">
+                        Supervisor
+                    </option>
+
+                    <option value="admin">
+                        Admin
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+        <br>
+
+        <button class="submit-btn"
+            onclick="createUser()">
+
+            ➕ Crear Usuario
+
+        </button>
+
+    </div>
+
+    <div class="card">
+
+        <h2>📚 Usuarios Registrados</h2>
+
+        <br>
+
+        <table class="history-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Nombre</th>
+                    <th>Employee ID</th>
+                    <th>Rol</th>
+                    <th>Activo</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="usersTable"></tbody>
+
+        </table>
+
+    </div>
+
+</div>
+    
     <!-- PROGRAMAR -->
 
     <div id="reportPage" class="page">
@@ -1052,6 +1137,7 @@ dashboardBtn.onclick=()=>{
 
     dashboardPage.classList.add("active");
     reportPage.classList.remove("active");
+    usersPage.classList.remove("active");
 
 };
 
@@ -1062,6 +1148,21 @@ reportBtn.onclick=()=>{
 
     reportPage.classList.add("active");
     dashboardPage.classList.remove("active");
+    usersPage.classList.remove("active");
+
+};
+
+    usersBtn.onclick=()=>{
+
+    usersBtn.classList.add("active");
+
+    dashboardBtn.classList.remove("active");
+    reportBtn.classList.remove("active");
+
+    dashboardPage.classList.remove("active");
+    reportPage.classList.remove("active");
+
+    usersPage.classList.add("active");
 
 };
 
