@@ -9,6 +9,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>    
+
 <style>
 
 :root{
@@ -532,35 +534,46 @@ header h1{
 
             <div class="quick-filters">
 
-                <button class="quick-btn"
-                    onclick="setQuickFilter('today')">
+    <button class="quick-btn"
+        onclick="setQuickFilter('today')">
 
-                    Hoy
+        Hoy
 
-                </button>
+    </button>
 
-                <button class="quick-btn"
-                    onclick="setQuickFilter('week')">
+    <button class="quick-btn"
+        onclick="setQuickFilter('week')">
 
-                    Semana
+        Semana
 
-                </button>
+    </button>
 
-                <button class="quick-btn"
-                    onclick="setQuickFilter('month')">
+    <button class="quick-btn"
+        onclick="setQuickFilter('month')">
 
-                    Mes
+        Mes
 
-                </button>
+    </button>
 
-                <button class="quick-btn"
-                    onclick="setQuickFilter('3months')">
+    <button class="quick-btn"
+        onclick="setQuickFilter('3months')">
 
-                    3 Meses
+        3 Meses
 
-                </button>
+    </button>
 
-            </div>
+    <button class="quick-btn"
+        onclick="exportToExcel()"
+        style="
+            background:#D40511;
+            color:white;
+        ">
+
+        📥 Exportar Excel
+
+    </button>
+
+</div>
 
         </div>
 
@@ -1944,6 +1957,79 @@ document
     .addEventListener("change",()=>updateDashboard(reports));
 
 loadReports();
+
+function exportToExcel(){
+
+    const filtered=
+        filterReports(reports);
+
+    let excelData=[];
+
+    filtered.forEach(r=>{
+
+        r.positions.forEach(p=>{
+
+            incidents.forEach(i=>{
+
+                const qty=
+                    p.incidents[i] || 0;
+
+                if(qty>0){
+
+                    excelData.push({
+
+                        Fecha:r.scheduledDate,
+
+                        Usuario:r.username,
+
+                        Nave:r.warehouse,
+
+                        Turno:r.shift,
+
+                        Puesto:p.position,
+
+                        Incidencia:i,
+
+                        Cantidad:qty
+
+                    });
+
+                }
+
+            });
+
+        });
+
+    });
+
+    if(excelData.length===0){
+
+        alert("No hay datos para exportar");
+
+        return;
+
+    }
+
+    const worksheet=
+        XLSX.utils.json_to_sheet(excelData);
+
+    const workbook=
+        XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Incidencias"
+    );
+
+    XLSX.writeFile(
+        workbook,
+        "DHL_Incidencias.xlsx"
+    );
+
+}
+
+window.exportToExcel=exportToExcel;    
 
 </script>
 
