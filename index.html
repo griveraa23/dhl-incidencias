@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>DHL Workforce Planning V7.1</title>
+<title>DHL Workforce Planning V8</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -28,6 +28,63 @@ body{
     background:var(--bg);
 }
 
+/* LOGIN */
+
+.login-screen{
+    position:fixed;
+    inset:0;
+    background:#f5f5f5;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.login-card{
+    width:100%;
+    max-width:420px;
+    background:white;
+    padding:40px;
+    border-radius:24px;
+    box-shadow:0 8px 30px rgba(0,0,0,.1);
+}
+
+.login-card h1{
+    color:var(--dhl-red);
+    margin-bottom:25px;
+    text-align:center;
+}
+
+.login-card input{
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid #ccc;
+    margin-bottom:20px;
+    font-size:16px;
+}
+
+.login-btn{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    background:var(--dhl-red);
+    color:white;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.login-error{
+    color:red;
+    margin-top:15px;
+    text-align:center;
+    display:none;
+}
+
+/* HEADER */
+
 header{
     background:var(--dhl-yellow);
     padding:20px;
@@ -41,9 +98,35 @@ header h1{
     color:var(--dhl-red);
 }
 
+.header-right{
+    display:flex;
+    gap:20px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
 .datetime{
     font-weight:bold;
 }
+
+.user-info{
+    background:white;
+    padding:10px 15px;
+    border-radius:12px;
+    font-weight:bold;
+}
+
+.logout-btn{
+    border:none;
+    background:var(--dhl-red);
+    color:white;
+    padding:10px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+/* GENERAL */
 
 .container{
     max-width:1900px;
@@ -119,11 +202,6 @@ header h1{
     font-weight:bold;
 }
 
-.quick-btn.active{
-    background:var(--dhl-red);
-    color:white;
-}
-
 .kpis{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -137,11 +215,6 @@ header h1{
     border-radius:20px;
     border-left:8px solid var(--dhl-red);
     cursor:pointer;
-    transition:.2s;
-}
-
-.kpi:hover{
-    transform:scale(1.02);
 }
 
 .kpi.active{
@@ -324,13 +397,62 @@ header h1{
 
 <body>
 
+<!-- LOGIN -->
+
+<div class="login-screen" id="loginScreen">
+
+    <div class="login-card">
+
+        <h1>📦 DHL Login</h1>
+
+        <input type="text"
+            id="employeeId"
+            placeholder="Usuario">
+
+        <input type="password"
+            id="password"
+            placeholder="Contraseña">
+
+        <button class="login-btn"
+            onclick="login()">
+
+            Ingresar
+
+        </button>
+
+        <div class="login-error" id="loginError">
+            Usuario o contraseña incorrectos
+        </div>
+
+    </div>
+
+</div>
+
 <header>
 
-    <h1>📦 DHL Workforce Planning V7.1</h1>
+    <h1>📦 DHL Workforce Planning V8</h1>
 
-    <div class="datetime">
-        <div id="date"></div>
-        <div id="time"></div>
+    <div class="header-right">
+
+        <div class="user-info"
+            id="activeUser">
+
+            👤 Sin sesión
+
+        </div>
+
+        <div class="datetime">
+            <div id="date"></div>
+            <div id="time"></div>
+        </div>
+
+        <button class="logout-btn"
+            onclick="logout()">
+
+            🔒 Cerrar sesión
+
+        </button>
+
     </div>
 
 </header>
@@ -388,22 +510,30 @@ header h1{
 
                 <button class="quick-btn"
                     onclick="setQuickFilter('today')">
+
                     Hoy
+
                 </button>
 
                 <button class="quick-btn"
                     onclick="setQuickFilter('week')">
+
                     Semana
+
                 </button>
 
                 <button class="quick-btn"
                     onclick="setQuickFilter('month')">
+
                     Mes
+
                 </button>
 
                 <button class="quick-btn"
                     onclick="setQuickFilter('3months')">
+
                     3 Meses
+
                 </button>
 
             </div>
@@ -462,7 +592,7 @@ header h1{
 
     </div>
 
-    <!-- PROGRAMACION -->
+    <!-- PROGRAMAR -->
 
     <div id="reportPage" class="page">
 
@@ -475,7 +605,16 @@ header h1{
                 <br>
 
                 <label>Usuario</label>
-                <input type="text" id="username">
+
+                <input
+                    type="text"
+                    id="username"
+                    readonly
+                    style="
+                        background:#f0f0f0;
+                        cursor:not-allowed;
+                    "
+                >
 
                 <br><br>
 
@@ -513,17 +652,23 @@ header h1{
 
                     <div class="selector shift"
                         onclick="selectShift(this,'Primero')">
+
                         ☀️ Primero
+
                     </div>
 
                     <div class="selector shift"
                         onclick="selectShift(this,'Segundo')">
+
                         🌤 Segundo
+
                     </div>
 
                     <div class="selector shift"
                         onclick="selectShift(this,'Tercero')">
+
                         🌙 Tercero
+
                     </div>
 
                 </div>
@@ -572,6 +717,8 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+/* FIREBASE */
+
 const firebaseConfig = {
 
   apiKey: "AIzaSyBpiI6tgL25Ssrt57n_9rxZJoTa9y0KC5g",
@@ -587,10 +734,43 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* USUARIOS */
+
+const users=[
+
+{
+    employeeId:"23139",
+    password:"DHL26$",
+    name:"Guillermo Rivera",
+    warehouses:["Nave 26","Nave 52"]
+},
+
+{
+    employeeId:"55201",
+    password:"DHL84$",
+    name:"Juan Perez",
+    warehouses:["Nave 84"]
+}
+
+];
+
+let currentUser=null;
+
+/* VARIABLES DEL SISTEMA */
+
 const warehouses = [
-"Nave 1","Nave 4","Nave 26","Nave 52",
-"Nave 84","Nave 82","Nave 101","Nave 109",
-"Forvia/HBPO","Mtto MHE","Falcon","Transportes"
+"Nave 1",
+"Nave 4",
+"Nave 26",
+"Nave 52",
+"Nave 84",
+"Nave 82",
+"Nave 101",
+"Nave 109",
+"Forvia/HBPO",
+"Mtto MHE",
+"Falcon",
+"Transportes"
 ];
 
 const positions = [
@@ -626,18 +806,111 @@ let selectedShift="";
 let reports=[];
 let activeIncident=null;
 
-const positionsData=[];
+const positionsData=[];    
+    
 
-const today=new Date();
+/* LOGIN */
+
+function login(){
+
+    const employeeId=
+        document.getElementById("employeeId").value;
+
+    const password=
+        document.getElementById("password").value;
+
+    const user=users.find(u=>
+
+        u.employeeId===employeeId &&
+        u.password===password
+
+    );
+
+    if(!user){
+
+        document
+            .getElementById("loginError")
+            .style.display="block";
+
+        return;
+
+    }
+
+    currentUser=user;
+
+    localStorage.setItem(
+        "dhlUser",
+        JSON.stringify(user)
+    );
+
+    startSession();
+
+}
+
+window.login=login;
+
+function startSession(){
+
+    document
+        .getElementById("loginScreen")
+        .style.display="none";
+
+    document
+        .getElementById("activeUser")
+        .innerHTML=`👤 ${currentUser.name}`;
+
+    const usernameInput=
+        document.getElementById("username");
+
+    if(usernameInput){
+
+        usernameInput.value=currentUser.name;
+        usernameInput.disabled=true;
+
+    }
+
+}
+
+function logout(){
+
+    localStorage.removeItem("dhlUser");
+
+    location.reload();
+
+}
+
+window.logout=logout;
+
+/* PERSISTENCIA */
+
+const savedUser=
+    localStorage.getItem("dhlUser");
+
+if(savedUser){
+
+    currentUser=
+        JSON.parse(savedUser);
+
+    setTimeout(()=>{
+        startSession();
+    },300);
+
+}
+
+/* FECHAS */
+
+const today = new Date();
 
 document.getElementById("scheduledDate").value =
-    today.toISOString().split("T")[0];
+    formatDate(today);
 
 document.getElementById("startDate").value =
-    today.toISOString().split("T")[0];
+    formatDate(today);
 
 document.getElementById("endDate").value =
-    today.toISOString().split("T")[0];
+    formatDate(today);    
+
+/* RELOJ */
 
 function updateClock(){
 
@@ -677,13 +950,15 @@ reportBtn.onclick=()=>{
 
 function renderWarehouses(){
 
-    const selectorContainer=
+    const selectorContainer =
         document.getElementById("warehouseSelectors");
 
-    const filter=
+    const filter =
         document.getElementById("warehouseFilter");
 
-    filter.innerHTML=
+    selectorContainer.innerHTML = "";
+
+    filter.innerHTML =
         `<option value="all">Todas</option>`;
 
     warehouses.forEach(w=>{
@@ -700,9 +975,11 @@ function renderWarehouses(){
         `;
 
         filter.innerHTML += `
+
             <option value="${w}">
                 ${w}
             </option>
+
         `;
 
     });
@@ -1025,11 +1302,16 @@ function resetForm(){
     selectedWarehouse="";
     selectedShift="";
 
-    document.getElementById("username").value="";
+    document.getElementById("username").value =
+    currentUser.name;
 
     document
-        .querySelectorAll(".selector")
-        .forEach(el=>el.classList.remove("active"));
+    .querySelectorAll("#warehouseSelectors .selector")
+    .forEach(el=>el.classList.remove("active"));
+
+document
+    .querySelectorAll(".shift")
+    .forEach(el=>el.classList.remove("active"));
 
     updateSummary();
 
@@ -1162,13 +1444,15 @@ function filterReports(data){
     const shiftFilter=
         document.getElementById("shiftFilter").value;
 
-    const startDate=
-        normalizeDate(document.getElementById("startDate").value);
+const startDate =
+    normalizeDate(document.getElementById("startDate").value);
 
-    const endDate=
-        normalizeDate(document.getElementById("endDate").value);
+const endDate =
+    normalizeDate(document.getElementById("endDate").value);
 
+if(endDate){
     endDate.setHours(23,59,59,999);
+}
 
     return data.filter(r=>{
 
