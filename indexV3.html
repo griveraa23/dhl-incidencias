@@ -947,13 +947,26 @@ function startSession(){
         .getElementById("loginScreen")
         .style.display="none";
 
+   if(currentUser.role==="admin"){
+
     document
-    .getElementById("activeUser")
-    .innerHTML=
+        .getElementById("activeUser")
+        .innerHTML=
 `
 👤 ${currentUser.name}
-(${currentUser.role})
+(admin)
 `;
+
+}else{
+
+    document
+        .getElementById("activeUser")
+        .innerHTML=
+`
+👤 ${currentUser.name}
+`;
+
+}
 
     const usernameInput=
         document.getElementById("username");
