@@ -495,6 +495,13 @@ header h1{
             📝 Programar
         </button>
 
+        <button id="usersBtn"
+    style="display:none;">
+
+    👥 Usuarios
+
+</button>
+
     </div>
 
     <!-- DASHBOARD -->
@@ -905,10 +912,11 @@ async function login(){
     
     const user=users.find(u=>
 
-        u.employeeId===employeeId &&
-        u.password===password
+    u.employeeId===employeeId &&
+    u.password===password &&
+    u.active===true
 
-    );
+);
 
     if(!user){
 
@@ -940,8 +948,12 @@ function startSession(){
         .style.display="none";
 
     document
-        .getElementById("activeUser")
-        .innerHTML=`👤 ${currentUser.name}`;
+    .getElementById("activeUser")
+    .innerHTML=
+`
+👤 ${currentUser.name}
+(${currentUser.role})
+`;
 
     const usernameInput=
         document.getElementById("username");
@@ -952,6 +964,14 @@ function startSession(){
         usernameInput.disabled=true;
 
     }
+
+    if(currentUser.role==="admin"){
+
+    document
+        .getElementById("usersBtn")
+        .style.display="block";
+
+}
 
 }
 
