@@ -495,6 +495,13 @@ header h1{
             📝 Programar
         </button>
 
+        <button id="usersBtn"
+    style="display:none;">
+
+    👥 Usuarios
+
+</button>
+
     </div>
 
     <!-- DASHBOARD -->
@@ -664,7 +671,92 @@ header h1{
         </div>
 
     </div>
+<!-- USUARIOS -->
 
+<div id="usersPage" class="page">
+
+    <div class="card">
+
+        <h2>👥 Administración de Usuarios</h2>
+
+        <br>
+
+        <div class="filters">
+
+            <div>
+                <label>Nombre</label>
+                <input type="text" id="newUserName">
+            </div>
+
+            <div>
+                <label>Employee ID</label>
+                <input type="text" id="newEmployeeId">
+            </div>
+
+            <div>
+                <label>Password</label>
+                <input type="text" id="newPassword">
+            </div>
+
+            <div>
+                <label>Rol</label>
+
+                <select id="newUserRole">
+
+                    <option value="supervisor">
+                        Supervisor
+                    </option>
+
+                    <option value="admin">
+                        Admin
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+        <br>
+
+        <button class="submit-btn"
+            onclick="createUser()">
+
+            ➕ Crear Usuario
+
+        </button>
+
+    </div>
+
+    <div class="card">
+
+        <h2>📚 Usuarios Registrados</h2>
+
+        <br>
+
+        <table class="history-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>Nombre</th>
+                    <th>Employee ID</th>
+                    <th>Rol</th>
+                    <th>Activo</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="usersTable"></tbody>
+
+        </table>
+
+    </div>
+
+</div>
+    
     <!-- PROGRAMAR -->
 
     <div id="reportPage" class="page">
@@ -787,7 +879,9 @@ import {
     collection,
     addDoc,
     onSnapshot,
-    getDocs
+    getDocs,
+    setDoc,
+    doc
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -905,10 +999,11 @@ async function login(){
     
     const user=users.find(u=>
 
-        u.employeeId===employeeId &&
-        u.password===password
+    u.employeeId===employeeId &&
+    u.password===password &&
+    u.active===true
 
-    );
+);
 
     if(!user){
 
@@ -939,9 +1034,26 @@ function startSession(){
         .getElementById("loginScreen")
         .style.display="none";
 
+   if(currentUser.role==="admin"){
+
     document
         .getElementById("activeUser")
-        .innerHTML=`👤 ${currentUser.name}`;
+        .innerHTML=
+`
+👤 ${currentUser.name}
+(admin)
+`;
+
+}else{
+
+    document
+        .getElementById("activeUser")
+        .innerHTML=
+`
+👤 ${currentUser.name}
+`;
+
+}
 
     const usernameInput=
         document.getElementById("username");
@@ -952,6 +1064,14 @@ function startSession(){
         usernameInput.disabled=true;
 
     }
+
+    if(currentUser.role==="admin"){
+
+    document
+        .getElementById("usersBtn")
+        .style.display="block";
+
+}
 
 }
 
@@ -1019,6 +1139,7 @@ dashboardBtn.onclick=()=>{
 
     dashboardPage.classList.add("active");
     reportPage.classList.remove("active");
+    usersPage.classList.remove("active");
 
 };
 
@@ -1029,6 +1150,23 @@ reportBtn.onclick=()=>{
 
     reportPage.classList.add("active");
     dashboardPage.classList.remove("active");
+    usersPage.classList.remove("active");
+
+};
+
+    usersBtn.onclick=()=>{
+
+    usersBtn.classList.add("active");
+
+    dashboardBtn.classList.remove("active");
+    reportBtn.classList.remove("active");
+
+    dashboardPage.classList.remove("active");
+    reportPage.classList.remove("active");
+
+    usersPage.classList.add("active");
+    
+        renderUsersTable();    
 
 };
 
@@ -1933,6 +2071,97 @@ trendChart.update();
 
 }
 
+async function createUser(){
+
+    try{
+
+        const name =
+            document.getElementById("newUserName").value;
+
+        const employeeId =
+            document.getElementById("newEmployeeId").value;
+
+        const password =
+            document.getElementById("newPassword").value;
+
+        const role =
+            document.getElementById("newUserRole").value;
+
+        if(
+            name.trim()==="" ||
+            employeeId.trim()==="" ||
+            password.trim()===""
+        ){
+            alert("Completa todos los campos");
+            return;
+        }
+
+        await setDoc(
+            doc(db,"users",employeeId),
+            {
+                employeeId,
+                password,
+                name,
+                role,
+                active:true,
+                warehouses:[]
+            }
+        );
+
+        alert("Usuario creado correctamente");
+
+        document.getElementById("newUserName").value="";
+        document.getElementById("newEmployeeId").value="";
+        document.getElementById("newPassword").value="";
+
+        await loadUsers();
+
+        renderUsersTable();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Error al crear usuario");
+
+    }
+
+}
+
+window.createUser=createUser;
+
+function renderUsersTable(){
+
+    const table =
+        document.getElementById("usersTable");
+
+    table.innerHTML="";
+
+    users.forEach(user=>{
+
+        table.innerHTML += `
+
+            <tr>
+
+                <td>${user.name}</td>
+
+                <td>${user.employeeId}</td>
+
+                <td>${user.role}</td>
+
+                <td>
+                    ${user.active ? "✅" : "❌"}
+                </td>
+
+            </tr>
+
+        `;
+
+    });
+
+}
+    
+    
 function loadReports(){
 
     onSnapshot(collection(db,"reports"),snapshot=>{
