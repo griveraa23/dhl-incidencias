@@ -1238,6 +1238,71 @@ addPositionBlock();
 
 async function submitReport(){
 
+    try{
+
+        const username=
+            document.getElementById("username").value;
+
+        const scheduledDate=
+            document.getElementById("scheduledDate").value;
+
+        if(username.trim()===""){
+            alert("Ingresa usuario");
+            return;
+        }
+
+        if(selectedWarehouse===""){
+            alert("Selecciona nave");
+            return;
+        }
+
+        if(selectedShift===""){
+            alert("Selecciona turno");
+            return;
+        }
+
+        const total=
+            positionsData.reduce((acc,p)=>{
+
+                return acc +
+                    Object.values(p.incidents)
+                        .reduce((a,b)=>a+b,0);
+
+            },0);
+
+        if(total===0){
+            alert("Agrega incidencias");
+            return;
+        }
+
+        await addDoc(collection(db,"reports"),{
+
+            username,
+            warehouse:selectedWarehouse,
+            shift:selectedShift,
+            positions:positionsData,
+            total,
+            scheduledDate,
+            timestamp:Date.now()
+
+        });
+
+        resetForm();
+
+        showToast();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Error al guardar programación"
+        );
+
+    }
+
+}
+
     const username=
         document.getElementById("username").value;
 
@@ -1370,29 +1435,84 @@ function setQuickFilter(type){
 
     const now=new Date();
 
-    let future=new Date();
+    let startDate=new Date(now);
+    let endDate=new Date(now);
+
+    /* HOY */
 
     if(type==="today"){
-        future=now;
+
+        startDate=new Date(now);
+        endDate=new Date(now);
+
     }
+
+    /* SEMANA CALENDARIO */
 
     if(type==="week"){
-        future.setDate(now.getDate()+7);
+
+        const day=now.getDay();
+
+        const diffToSunday=
+            now.getDate()-day;
+
+        startDate=
+            new Date(now.setDate(diffToSunday));
+
+        endDate=
+            new Date(startDate);
+
+        endDate.setDate(
+            startDate.getDate()+6
+        );
+
     }
+
+    /* MES CALENDARIO */
 
     if(type==="month"){
-        future.setMonth(now.getMonth()+1);
+
+        startDate=
+            new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                1
+            );
+
+        endDate=
+            new Date(
+                now.getFullYear(),
+                now.getMonth()+1,
+                0
+            );
+
     }
 
+    /* 3 MESES */
+
     if(type==="3months"){
-        future.setMonth(now.getMonth()+3);
+
+        startDate=
+            new Date(
+                now.getFullYear(),
+                now.getMonth()-1,
+                1
+            );
+
+        endDate=
+            new Date(
+                now.getFullYear(),
+                now.getMonth()+2,
+                0
+            );
+
     }
 
     start.value=
-        formatDate(now);
+        formatDate(startDate);
 
     end.value=
-        formatDate(future);
+        formatDate(endDate);
 
     updateDashboard(reports);
 
