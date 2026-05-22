@@ -786,7 +786,8 @@ import {
     getFirestore,
     collection,
     addDoc,
-    onSnapshot
+    onSnapshot,
+    getDocs
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -809,25 +810,29 @@ const db = getFirestore(app);
 
 /* USUARIOS */
 
-const users=[
-
-{
-    employeeId:"23139",
-    password:"DHL26$",
-    name:"Guillermo Rivera",
-    warehouses:["Nave 26","Nave 52"]
-},
-
-{
-    employeeId:"55201",
-    password:"DHL84$",
-    name:"Juan Perez",
-    warehouses:["Nave 84"]
-}
-
-];
+let users=[];
 
 let currentUser=null;
+
+async function loadUsers(){
+
+    const snapshot =
+        await getDocs(collection(db,"users"));
+
+    users=[];
+
+    snapshot.forEach(doc=>{
+
+        users.push(doc.data());
+
+    });
+
+    console.log(
+        "Usuarios cargados:",
+        users
+    );
+
+}    
 
 /* VARIABLES DEL SISTEMA */
 
@@ -884,7 +889,7 @@ const positionsData=[];
 
 /* LOGIN */
 
-function login(){
+async function login(){
 
     const employeeId=
         document.getElementById("employeeId").value;
@@ -892,6 +897,12 @@ function login(){
     const password=
         document.getElementById("password").value;
 
+    if(users.length===0){
+
+    await loadUsers();
+
+}
+    
     const user=users.find(u=>
 
         u.employeeId===employeeId &&
@@ -1955,6 +1966,8 @@ document
 document
     .getElementById("endDate")
     .addEventListener("change",()=>updateDashboard(reports));
+
+await loadUsers();
 
 loadReports();
 
