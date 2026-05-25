@@ -202,10 +202,11 @@ header h1{
     background:#eee;
     cursor:pointer;
     font-weight:bold;
-    .quick-btn.active{
+}
+
+.quick-btn.active{
     background:var(--dhl-red);
     color:white;
-}
 }
 
 .kpis{
@@ -707,7 +708,7 @@ header h1{
 
             <div>
                 <label>Password</label>
-                <input type="text" id="newPassword">
+                <input type="password" id="newPassword">
             </div>
 
             <div>
@@ -1159,29 +1160,6 @@ const hashedPassword =
     u.active===true
 
 );
-
-    /* ADMIN MASTER TEMPORAL */
-
-if(
-    employeeId==="admin" &&
-    password==="DHLAdmin2025"
-){
-
-    currentUser = {
-        employeeId:"admin",
-        name:"Administrador",
-        role:"admin",
-        active:true
-    };
-
-    localStorage.setItem(
-        "dhlUser",
-        JSON.stringify(currentUser)
-    );
-
-    startSession();
-
-    return;
 
 }
 
@@ -2638,10 +2616,10 @@ async function editUser(employeeId){
         }
 
         const newPassword=
-            prompt(
-                "Password:",
-                user.password
-            );
+    prompt(
+        "Nueva password (dejar vacío para no cambiar):",
+        ""
+    );
 
         if(newPassword===null){
             return;
@@ -2665,16 +2643,23 @@ async function editUser(employeeId){
     return;
 }
 
-        await setDoc(
-            doc(db,"users",employeeId),
-            {
-                ...user,
+        const updatedData = {
+    ...user,
+    name:newName,
+    role:newRole
+};
 
-                name:newName,
-                password:await hashPassword(newPassword),
-                role:newRole
-            }
-        );
+if(newPassword.trim()!==""){
+
+    updatedData.password =
+        await hashPassword(newPassword);
+
+}
+
+await setDoc(
+    doc(db,"users",employeeId),
+    updatedData
+);
 
         await loadUsers();
 
