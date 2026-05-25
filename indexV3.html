@@ -1138,32 +1138,30 @@ const positionsData=[];
 
 async function login(){
 
-    const employeeId=
+    const employeeId =
         document.getElementById("employeeId").value;
 
-    const password=
+    const password =
         document.getElementById("password").value;
 
-const hashedPassword =
-    await hashPassword(password);
+    const hashedPassword =
+        await hashPassword(password);
 
     if(users.length===0){
 
-    await loadUsers();
+        await loadUsers();
 
-}
-    
-    const user=users.find(u=>
+    }
 
-    u.employeeId===employeeId &&
-    u.password===hashedPassword &&
-    u.active===true
+    const user = users.find(u =>
 
-);
+        u.employeeId === employeeId &&
+        u.password === hashedPassword &&
+        u.active === true
 
-}
+    );
 
-if(!user){
+    if(!user){
 
         document
             .getElementById("loginError")
@@ -1173,7 +1171,7 @@ if(!user){
 
     }
 
-    currentUser=user;
+    currentUser = user;
 
     localStorage.setItem(
         "dhlUser",
@@ -1184,7 +1182,7 @@ if(!user){
 
 }
 
-window.login=login;
+window.login = login;
 
 function startSession(){
 
@@ -1291,6 +1289,21 @@ setInterval(updateClock,1000);
 updateClock();
 
 document.getElementById("dashboardBtn").onclick=()=>{
+
+    const dashboardBtn =
+    document.getElementById("dashboardBtn");
+
+const reportBtn =
+    document.getElementById("reportBtn");
+
+const dashboardPage =
+    document.getElementById("dashboardPage");
+
+const reportPage =
+    document.getElementById("reportPage");
+
+const usersPage =
+    document.getElementById("usersPage");
 
     usersBtnElement.classList.remove("active");
 
