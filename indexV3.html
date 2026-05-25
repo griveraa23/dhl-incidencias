@@ -1141,7 +1141,7 @@ setInterval(updateClock,1000);
 
 updateClock();
 
-dashboardBtn.onclick=()=>{
+document.getElementById("dashboardBtn").onclick=()=>{
 
     usersBtn.classList.remove("active");
 
@@ -1190,19 +1190,7 @@ if(usersBtnElement){
 
 }
 
-    usersBtn.classList.add("active");
-
-    dashboardBtn.classList.remove("active");
-    reportBtn.classList.remove("active");
-
-    dashboardPage.classList.remove("active");
-    reportPage.classList.remove("active");
-
-    usersPage.classList.add("active");
     
-        renderUsersTable();    
-
-};
 
 function renderWarehouses(){
 
