@@ -856,7 +856,9 @@ header h1{
                 <button class="submit-btn"
                     onclick="submitReport()">
 
-                    🚀 Guardar Programación
+                    <span id="submitButtonText">
+                        🚀 Guardar Programación
+                        </span>
 
                 </button>
 
@@ -946,8 +948,9 @@ const warehouses = [
 "Nave 109",
 "Forvia/HBPO",
 "Mtto MHE",
-"Falcon",
-"Transportes"
+"Almacen",
+"Transportes",
+"Sistemas"
 ];
 
 const positions = [
@@ -982,6 +985,7 @@ let selectedWarehouse="";
 let selectedShift="";
 let reports=[];
 let activeIncident=null;
+let editingReportId=null;
 
 const positionsData=[];    
     
@@ -1139,6 +1143,8 @@ updateClock();
 
 dashboardBtn.onclick=()=>{
 
+    usersBtn.classList.remove("active");
+
     dashboardBtn.classList.add("active");
     reportBtn.classList.remove("active");
 
@@ -1150,6 +1156,8 @@ dashboardBtn.onclick=()=>{
 
 reportBtn.onclick=()=>{
 
+    usersBtn.classList.remove("active");
+
     reportBtn.classList.add("active");
     dashboardBtn.classList.remove("active");
 
@@ -1159,7 +1167,28 @@ reportBtn.onclick=()=>{
 
 };
 
-    usersBtn.onclick=()=>{
+    const usersBtnElement =
+    document.getElementById("usersBtn");
+
+if(usersBtnElement){
+
+    usersBtnElement.onclick=()=>{
+
+        usersBtnElement.classList.add("active");
+
+        dashboardBtn.classList.remove("active");
+        reportBtn.classList.remove("active");
+
+        dashboardPage.classList.remove("active");
+        reportPage.classList.remove("active");
+
+        usersPage.classList.add("active");
+
+        renderUsersTable();
+
+    };
+
+}
 
     usersBtn.classList.add("active");
 
@@ -1465,6 +1494,11 @@ addPositionBlock();
 
 async function submitReport(){
 
+    const submitButton =
+    document.querySelector(".submit-btn");
+
+submitButton.disabled=true;
+
     try{
 
         const username=
@@ -1488,6 +1522,21 @@ async function submitReport(){
             return;
         }
 
+        const invalidPosition =
+    positionsData.some(
+        p=>p.position.trim()===""
+    );
+
+if(invalidPosition){
+
+    alert(
+        "Todos los puestos deben seleccionarse"
+    );
+
+    return;
+
+}
+
         const total=
             positionsData.reduce((acc,p)=>{
 
@@ -1502,23 +1551,54 @@ async function submitReport(){
             return;
         }
 
-        await addDoc(collection(db,"reports"),{
+        const reportData={
 
-            username,
-            warehouse:selectedWarehouse,
-            shift:selectedShift,
-            positions:positionsData,
-            total,
-            scheduledDate,
-            timestamp:Date.now()
+    username,
+    warehouse:selectedWarehouse,
+    shift:selectedShift,
+    positions:positionsData,
+    total,
+    scheduledDate,
+    timestamp:Date.now()
 
-        });
+};
+
+/* NUEVO */
+
+if(editingReportId===null){
+
+    await addDoc(
+        collection(db,"reports"),
+        reportData
+    );
+
+}else{
+
+    /* EDITAR */
+
+    await setDoc(
+
+        doc(
+            db,
+            "reports",
+            editingReportId
+        ),
+
+        reportData
+
+    );
+
+}
 
         resetForm();
 
         showToast();
 
+        submitButton.disabled=false;
+
     }catch(error){
+
+        submitButton.disabled=false;
 
         console.error(error);
 
@@ -1533,6 +1613,13 @@ async function submitReport(){
 window.submitReport=submitReport;
 
 function resetForm(){
+
+    editingReportId=null;
+    
+    document.getElementById(
+    "submitButtonText"
+).innerHTML=
+"🚀 Guardar Programación";
 
     positionsData.length=0;
 
@@ -2135,6 +2222,18 @@ async function createUser(){
             return;
         }
 
+        const existingUser =
+    users.find(
+        u=>u.employeeId===employeeId
+    );
+
+if(existingUser){
+
+    alert("El Employee ID ya existe");
+    return;
+
+}
+
         await setDoc(
             doc(db,"users",employeeId),
             {
@@ -2243,6 +2342,14 @@ async function editUser(employeeId){
             return;
         }
 
+        if(
+    newRole!=="admin" &&
+    newRole!=="supervisor"
+){
+    alert("Rol inválido");
+    return;
+}
+
         await setDoc(
             doc(db,"users",employeeId),
             {
@@ -2349,62 +2456,59 @@ function renderUsersTable(){
 
                 <td>
 
-                    <button
-                        onclick="toggleUserStatus('${user.employeeId}',${user.active})"
-                        style="
-                            padding:8px 12px;
-                            border:none;
-                            border-radius:8px;
-                            cursor:pointer;
-                            background:${user.active ? '#ffe1e1' : '#d4ffd4'};
-                            color:${user.active ? '#D40511' : '#0a7a0a'};
-                            font-weight:bold;
-                        "
-                    >
+    <button
+        onclick="toggleUserStatus('${user.employeeId}',${user.active})"
+        style="
+            padding:8px 12px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            background:${user.active ? '#ffe1e1' : '#d4ffd4'};
+            color:${user.active ? '#D40511' : '#0a7a0a'};
+            font-weight:bold;
+            margin-bottom:5px;
+        "
+    >
+        ${user.active ? 'Desactivar' : 'Activar'}
+    </button>
 
-                        ${user.active ? 'Desactivar' : 'Activar'}
+    <br>
 
-                        <br><br>
+    <button
+        onclick="editUser('${user.employeeId}')"
+        style="
+            padding:8px 12px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            background:#FFCC00;
+            font-weight:bold;
+            margin-top:5px;
+            margin-bottom:5px;
+        "
+    >
+        ✏️ Editar
+    </button>
 
-                            <button
-                                  onclick="editUser('${user.employeeId}')"
-                                  style="
-                                  padding:8px 12px;
-                                  border:none;
-                                  border-radius:8px;
-                                  cursor:pointer;
-                                  background:#FFCC00;
-                                  font-weight:bold;
-                                  "
-                                  >
+    <br>
 
-                                  ✏️ Editar
+    <button
+        onclick="resetPassword('${user.employeeId}')"
+        style="
+            padding:8px 12px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            background:#D40511;
+            color:white;
+            font-weight:bold;
+            margin-top:5px;
+        "
+    >
+        🔐 Reset Password
+    </button>
 
-                                  <br><br>
-
-                                    <button
-    onclick="resetPassword('${user.employeeId}')"
-    style="
-        padding:8px 12px;
-        border:none;
-        border-radius:8px;
-        cursor:pointer;
-        background:#D40511;
-        color:white;
-        font-weight:bold;
-    "
->
-
-    🔐 Reset Password
-
-</button>
-
-                                </button>
-
-                    </button>
-
-                </td>
-
+</td>
             </tr>
 
         `;
@@ -2573,6 +2677,8 @@ function editReport(reportId){
             r=>r.id===reportId
         );
 
+    editingReportId=reportId;
+
     if(!report){
         return;
     }
@@ -2634,7 +2740,7 @@ function editReport(reportId){
 
     positionsData.length=0;
 
-    report.positions.forEach(p=>{
+    (report.positions || []).forEach(p=>{
 
         positionsData.push({
 
@@ -2649,6 +2755,11 @@ function editReport(reportId){
     });
 
     renderPositions();
+
+    document.getElementById(
+    "submitButtonText"
+).innerHTML=
+"💾 Actualizar Programación";
 
     updateSummary();
 
