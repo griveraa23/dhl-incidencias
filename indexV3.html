@@ -202,6 +202,10 @@ header h1{
     background:#eee;
     cursor:pointer;
     font-weight:bold;
+    .quick-btn.active{
+    background:var(--dhl-red);
+    color:white;
+}
 }
 
 .kpis{
@@ -1047,6 +1051,31 @@ async function loadUsers(){
         users
     );
 
+}
+
+/* HASH PASSWORD */
+
+async function hashPassword(password){
+
+    const encoder = new TextEncoder();
+
+    const data = encoder.encode(password);
+
+    const hashBuffer = await crypto.subtle.digest(
+        "SHA-256",
+        data
+    );
+
+    const hashArray = Array.from(
+        new Uint8Array(hashBuffer)
+    );
+
+    const hashHex = hashArray
+        .map(b=>b.toString(16).padStart(2,"0"))
+        .join("");
+
+    return hashHex;
+
 }    
 
 /* VARIABLES DEL SISTEMA */
@@ -1114,6 +1143,9 @@ async function login(){
     const password=
         document.getElementById("password").value;
 
+const hashedPassword =
+    await hashPassword(password);
+
     if(users.length===0){
 
     await loadUsers();
@@ -1123,12 +1155,37 @@ async function login(){
     const user=users.find(u=>
 
     u.employeeId===employeeId &&
-    u.password===password &&
+    u.password===hashedPassword &&
     u.active===true
 
 );
 
-    if(!user){
+    /* ADMIN MASTER TEMPORAL */
+
+if(
+    employeeId==="admin" &&
+    password==="DHLAdmin2025"
+){
+
+    currentUser = {
+        employeeId:"admin",
+        name:"Administrador",
+        role:"admin",
+        active:true
+    };
+
+    localStorage.setItem(
+        "dhlUser",
+        JSON.stringify(currentUser)
+    );
+
+    startSession();
+
+    return;
+
+}
+
+if(!user){
 
         document
             .getElementById("loginError")
@@ -1969,6 +2026,31 @@ const trendChart=new Chart(
 
 function setQuickFilter(type){
 
+    /* LIMPIAR BOTONES ACTIVOS */
+
+    document
+        .querySelectorAll(".quick-btn")
+        .forEach(btn=>btn.classList.remove("active"));
+
+    /* ACTIVAR BOTÓN SELECCIONADO */
+
+    const buttonMap = {
+        today:0,
+        week:1,
+        month:2,
+        "3months":3
+    };
+
+    const buttons =
+        document.querySelectorAll(".quick-btn");
+
+    if(buttonMap[type] !== undefined){
+
+        buttons[buttonMap[type]]
+            .classList.add("active");
+
+    }
+
     const start=
         document.getElementById("startDate");
 
@@ -2059,7 +2141,6 @@ function setQuickFilter(type){
     updateDashboard(reports);
 
 }
-
 window.setQuickFilter=setQuickFilter;
 
 function formatDate(date){
@@ -2444,6 +2525,9 @@ async function createUser(){
         const role =
             document.getElementById("newUserRole").value;
 
+        const hashedPassword =
+            await hashPassword(password);
+
         if(
             name.trim()==="" ||
             employeeId.trim()==="" ||
@@ -2469,7 +2553,7 @@ if(existingUser){
             doc(db,"users",employeeId),
             {
                 employeeId,
-                password,
+                password:hashedPassword,
                 name,
                 role,
                 active:true,
@@ -2587,7 +2671,7 @@ async function editUser(employeeId){
                 ...user,
 
                 name:newName,
-                password:newPassword,
+                password:await hashPassword(newPassword),
                 role:newRole
             }
         );
@@ -2633,7 +2717,7 @@ async function resetPassword(employeeId){
             doc(db,"users",employeeId),
             {
                 ...user,
-                password:tempPassword
+                password:await hashPassword(tempPassword)
             }
         );
 
