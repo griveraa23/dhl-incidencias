@@ -659,6 +659,8 @@ header h1{
                         <th>Nave</th>
                         <th>Turno</th>
                         <th>Total</th>
+                        
+                        <th>Acciones</th>
 
                     </tr>
 
@@ -882,8 +884,10 @@ import {
     onSnapshot,
     getDocs,
     setDoc,
-    doc
+    doc,
+    deleteDoc
 }
+    
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* FIREBASE */
@@ -2015,6 +2019,40 @@ trendTotals[r.scheduledDate]+=reportTotal;
                 <td>${r.shift}</td>
                 <td>${reportTotal}</td>
 
+<td>
+
+    <button
+        onclick="editReport('${r.id}')"
+        style="
+            padding:6px 10px;
+            border:none;
+            border-radius:8px;
+            background:#FFCC00;
+            font-weight:bold;
+            cursor:pointer;
+            margin-right:5px;
+        "
+    >
+        ✏️
+    </button>
+
+    <button
+        onclick="deleteReport('${r.id}')"
+        style="
+            padding:6px 10px;
+            border:none;
+            border-radius:8px;
+            background:#D40511;
+            color:white;
+            font-weight:bold;
+            cursor:pointer;
+        "
+    >
+        🗑
+    </button>
+
+</td>
+
             </tr>
 
         `;
@@ -2384,7 +2422,13 @@ function loadReports(){
 
         snapshot.forEach(doc=>{
 
-            reports.push(doc.data());
+            reports.push({
+
+    id:doc.id,
+
+    ...doc.data()
+
+});
 
         });
 
@@ -2485,7 +2529,132 @@ function exportToExcel(){
 
 }
 
-window.exportToExcel=exportToExcel;    
+window.exportToExcel=exportToExcel;
+
+async function deleteReport(reportId){
+
+    try{
+
+        const confirmDelete=
+            confirm(
+                "¿Eliminar programación?"
+            );
+
+        if(!confirmDelete){
+            return;
+        }
+
+        await deleteDoc(
+            doc(db,"reports",reportId)
+        );
+
+        alert(
+            "Programación eliminada"
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Error al eliminar"
+        );
+
+    }
+
+}
+
+window.deleteReport=deleteReport;
+
+function editReport(reportId){
+
+    const report=
+        reports.find(
+            r=>r.id===reportId
+        );
+
+    if(!report){
+        return;
+    }
+
+    /* IR A PROGRAMAR */
+
+    reportBtn.click();
+
+    /* CARGAR DATOS */
+
+    document.getElementById(
+        "scheduledDate"
+    ).value=report.scheduledDate;
+
+    selectedWarehouse=
+        report.warehouse;
+
+    selectedShift=
+        report.shift;
+
+    /* ACTIVAR NAVE */
+
+    document
+        .querySelectorAll(
+            "#warehouseSelectors .selector"
+        )
+        .forEach(el=>{
+
+            el.classList.remove("active");
+
+            if(
+                el.innerText.trim()===
+                report.warehouse
+            ){
+                el.classList.add("active");
+            }
+
+        });
+
+    /* ACTIVAR TURNO */
+
+    document
+        .querySelectorAll(".shift")
+        .forEach(el=>{
+
+            el.classList.remove("active");
+
+            if(
+                el.innerText.includes(
+                    report.shift
+                )
+            ){
+                el.classList.add("active");
+            }
+
+        });
+
+    /* CARGAR POSICIONES */
+
+    positionsData.length=0;
+
+    report.positions.forEach(p=>{
+
+        positionsData.push({
+
+            id:Date.now()+Math.random(),
+
+            position:p.position,
+
+            incidents:{...p.incidents}
+
+        });
+
+    });
+
+    renderPositions();
+
+    updateSummary();
+
+}
+
+window.editReport=editReport;    
 
 </script>
 
