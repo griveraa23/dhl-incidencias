@@ -204,6 +204,11 @@ header h1{
     font-weight:bold;
 }
 
+.quick-btn.active{
+    background:var(--dhl-red);
+    color:white;
+}
+
 .kpis{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -660,6 +665,14 @@ header h1{
                         <th>Turno</th>
                         <th>Total</th>
 
+                        <th>Tipo</th>
+
+                        <th>Creado</th>
+
+                        <th>Origen</th>
+                        
+                        <th>Acciones</th>
+                        
                     </tr>
 
                 </thead>
@@ -695,7 +708,7 @@ header h1{
 
             <div>
                 <label>Password</label>
-                <input type="text" id="newPassword">
+                <input type="password" id="newPassword">
             </div>
 
             <div>
@@ -744,6 +757,7 @@ header h1{
                     <th>Employee ID</th>
                     <th>Rol</th>
                     <th>Activo</th>
+                    <th>Acciones</th>
 
                 </tr>
 
@@ -785,6 +799,58 @@ header h1{
 
                 <label>Fecha Programada</label>
                 <input type="date" id="scheduledDate">
+
+                <br><br>
+
+<label>
+    Aplicar programación a:
+</label>
+
+<div
+    style="
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-top:10px;
+    "
+>
+
+    <label class="selector">
+        <input type="checkbox" class="multiDay" value="1">
+        Lun
+    </label>
+
+    <label class="selector">
+        <input type="checkbox" class="multiDay" value="2">
+        Mar
+    </label>
+
+    <label class="selector">
+        <input type="checkbox" class="multiDay" value="3">
+        Mié
+    </label>
+
+    <label class="selector">
+        <input type="checkbox" class="multiDay" value="4">
+        Jue
+    </label>
+
+    <label class="selector">
+        <input type="checkbox" class="multiDay" value="5">
+        Vie
+    </label>
+
+    <label class="selector">
+        <input type="checkbox" class="multiDay" value="6">
+        Sáb
+    </label>
+
+    <label class="selector">
+        <input type="checkbox" class="multiDay" value="0">
+        Dom
+    </label>
+
+</div>
 
                 <br><br>
 
@@ -853,7 +919,9 @@ header h1{
                 <button class="submit-btn"
                     onclick="submitReport()">
 
-                    🚀 Guardar Programación
+                    <span id="submitButtonText">
+                        🚀 Guardar Programación
+                        </span>
 
                 </button>
 
@@ -869,6 +937,62 @@ header h1{
     Programación guardada correctamente
 </div>
 
+    <!-- MODAL DETALLE -->
+
+<div id="detailModal"
+    style="
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.6);
+        z-index:99999;
+        justify-content:center;
+        align-items:center;
+        padding:20px;
+    ">
+
+    <div
+        style="
+            background:white;
+            width:100%;
+            max-width:900px;
+            max-height:90vh;
+            overflow:auto;
+            border-radius:20px;
+            padding:25px;
+            position:relative;
+        "
+    >
+
+        <button
+            onclick="closeDetailModal()"
+            style="
+                position:absolute;
+                top:15px;
+                right:15px;
+                border:none;
+                background:#D40511;
+                color:white;
+                width:35px;
+                height:35px;
+                border-radius:50%;
+                cursor:pointer;
+                font-weight:bold;
+            "
+        >
+            X
+        </button>
+
+        <h2>📋 Detalle de Programación</h2>
+
+        <br>
+
+        <div id="detailContent"></div>
+
+    </div>
+
+</div>
+
 <script type="module">
 
 import { initializeApp }
@@ -881,8 +1005,10 @@ import {
     onSnapshot,
     getDocs,
     setDoc,
-    doc
+    doc,
+    deleteDoc
 }
+    
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* FIREBASE */
@@ -925,6 +1051,31 @@ async function loadUsers(){
         "Usuarios cargados:",
         users
     );
+
+}
+
+/* HASH PASSWORD */
+
+async function hashPassword(password){
+
+    const encoder = new TextEncoder();
+
+    const data = encoder.encode(password);
+
+    const hashBuffer = await crypto.subtle.digest(
+        "SHA-256",
+        data
+    );
+
+    const hashArray = Array.from(
+        new Uint8Array(hashBuffer)
+    );
+
+    const hashHex = hashArray
+        .map(b=>b.toString(16).padStart(2,"0"))
+        .join("");
+
+    return hashHex;
 
 }    
 
@@ -978,6 +1129,7 @@ let selectedWarehouse="";
 let selectedShift="";
 let reports=[];
 let activeIncident=null;
+let editingReportId=null;
 
 const positionsData=[];    
     
@@ -986,25 +1138,28 @@ const positionsData=[];
 
 async function login(){
 
-    const employeeId=
+    const employeeId =
         document.getElementById("employeeId").value;
 
-    const password=
+    const password =
         document.getElementById("password").value;
+
+    const hashedPassword =
+        await hashPassword(password);
 
     if(users.length===0){
 
-    await loadUsers();
+        await loadUsers();
 
-}
-    
-    const user=users.find(u=>
+    }
 
-    u.employeeId===employeeId &&
-    u.password===password &&
-    u.active===true
+    const user = users.find(u =>
 
-);
+        u.employeeId === employeeId &&
+        u.password === hashedPassword &&
+        u.active === true
+
+    );
 
     if(!user){
 
@@ -1016,7 +1171,7 @@ async function login(){
 
     }
 
-    currentUser=user;
+    currentUser = user;
 
     localStorage.setItem(
         "dhlUser",
@@ -1027,7 +1182,7 @@ async function login(){
 
 }
 
-window.login=login;
+window.login = login;
 
 function startSession(){
 
@@ -1133,7 +1288,24 @@ setInterval(updateClock,1000);
 
 updateClock();
 
-dashboardBtn.onclick=()=>{
+document.getElementById("dashboardBtn").onclick=()=>{
+
+    const dashboardBtn =
+    document.getElementById("dashboardBtn");
+
+const reportBtn =
+    document.getElementById("reportBtn");
+
+const dashboardPage =
+    document.getElementById("dashboardPage");
+
+const reportPage =
+    document.getElementById("reportPage");
+
+const usersPage =
+    document.getElementById("usersPage");
+
+    usersBtnElement.classList.remove("active");
 
     dashboardBtn.classList.add("active");
     reportBtn.classList.remove("active");
@@ -1146,6 +1318,8 @@ dashboardBtn.onclick=()=>{
 
 reportBtn.onclick=()=>{
 
+    usersBtnElement.classList.remove("active");
+
     reportBtn.classList.add("active");
     dashboardBtn.classList.remove("active");
 
@@ -1155,21 +1329,30 @@ reportBtn.onclick=()=>{
 
 };
 
-    usersBtn.onclick=()=>{
+    const usersBtnElement =
+    document.getElementById("usersBtn");
 
-    usersBtn.classList.add("active");
+if(usersBtnElement){
 
-    dashboardBtn.classList.remove("active");
-    reportBtn.classList.remove("active");
+    usersBtnElement.onclick=()=>{
 
-    dashboardPage.classList.remove("active");
-    reportPage.classList.remove("active");
+        usersBtnElement.classList.add("active");
 
-    usersPage.classList.add("active");
+        dashboardBtn.classList.remove("active");
+        reportBtn.classList.remove("active");
+
+        dashboardPage.classList.remove("active");
+        reportPage.classList.remove("active");
+
+        usersPage.classList.add("active");
+
+        renderUsersTable();
+
+    };
+
+}
+
     
-        renderUsersTable();    
-
-};
 
 function renderWarehouses(){
 
@@ -1461,6 +1644,11 @@ addPositionBlock();
 
 async function submitReport(){
 
+    const submitButton =
+    document.querySelector(".submit-btn");
+
+submitButton.disabled=true;
+
     try{
 
         const username=
@@ -1484,6 +1672,21 @@ async function submitReport(){
             return;
         }
 
+        const invalidPosition =
+    positionsData.some(
+        p=>p.position.trim()===""
+    );
+
+if(invalidPosition){
+
+    alert(
+        "Todos los puestos deben seleccionarse"
+    );
+
+    return;
+
+}
+
         const total=
             positionsData.reduce((acc,p)=>{
 
@@ -1498,23 +1701,139 @@ async function submitReport(){
             return;
         }
 
-        await addDoc(collection(db,"reports"),{
+        const creationType =
 
-            username,
-            warehouse:selectedWarehouse,
-            shift:selectedShift,
-            positions:positionsData,
-            total,
-            scheduledDate,
-            timestamp:Date.now()
+    document.querySelectorAll(
+        ".multiDay:checked"
+    ).length>0
 
-        });
+    ? "multi-day"
+
+    : "manual";
+
+        const creationTimestamp = Date.now();
+
+const reportDataBase={
+
+    username,
+    warehouse:selectedWarehouse,
+    shift:selectedShift,
+    positions:positionsData,
+    total,
+
+    creationType,
+
+    timestamp:creationTimestamp,
+
+    createdAt:
+        new Date(creationTimestamp)
+            .toLocaleString(),
+
+    createdFromDate:
+        scheduledDate,
+
+    createdBy:
+        currentUser.employeeId
+
+};
+
+/* EDITAR */
+
+if(editingReportId!==null){
+
+    await setDoc(
+
+        doc(
+            db,
+            "reports",
+            editingReportId
+        ),
+
+        {
+            ...reportDataBase,
+            scheduledDate
+        }
+
+    );
+
+}else{
+
+    /* CREAR MULTIPLES DIAS */
+
+
+    const checkedDays = [
+
+        ...document.querySelectorAll(
+            ".multiDay:checked"
+        )
+
+    ].map(cb=>parseInt(cb.value));
+
+/* SI NO SELECCIONA DÍAS
+   SOLO GUARDA LA FECHA NORMAL */
+
+if(checkedDays.length===0){
+
+    await addDoc(
+        collection(db,"reports"),
+        {
+            ...reportDataBase,
+            scheduledDate
+        }
+    );
+
+}else{
+
+    const baseDate =
+        new Date(
+            scheduledDate + "T00:00:00"
+        );
+
+    /* OBTENER DOMINGO */
+
+    const sunday =
+        new Date(baseDate);
+
+    sunday.setDate(
+        baseDate.getDate() -
+        baseDate.getDay()
+    );
+
+    for(const day of checkedDays){
+
+        const newDate =
+            new Date(sunday);
+
+        newDate.setDate(
+            sunday.getDate() + day
+        );
+
+        const formattedDate =
+            formatDate(newDate);
+
+        await addDoc(
+            collection(db,"reports"),
+            {
+                ...reportDataBase,
+                scheduledDate: formattedDate
+            }
+        );
+
+    }
+
+}
+
+}
 
         resetForm();
 
         showToast();
 
+        submitButton.disabled=false;
+
     }catch(error){
+
+        submitButton.disabled=false;
 
         console.error(error);
 
@@ -1529,6 +1848,13 @@ async function submitReport(){
 window.submitReport=submitReport;
 
 function resetForm(){
+
+    editingReportId=null;
+    
+    document.getElementById(
+    "submitButtonText"
+).innerHTML=
+"🚀 Guardar Programación";
 
     positionsData.length=0;
 
@@ -1548,7 +1874,11 @@ document
     .querySelectorAll(".shift")
     .forEach(el=>el.classList.remove("active"));
 
-    updateSummary();
+document
+    .querySelectorAll(".multiDay")
+    .forEach(cb=>cb.checked=false);
+
+updateSummary();
 
 }
 
@@ -1687,6 +2017,31 @@ const trendChart=new Chart(
 
 function setQuickFilter(type){
 
+    /* LIMPIAR BOTONES ACTIVOS */
+
+    document
+        .querySelectorAll(".quick-btn")
+        .forEach(btn=>btn.classList.remove("active"));
+
+    /* ACTIVAR BOTÓN SELECCIONADO */
+
+    const buttonMap = {
+        today:0,
+        week:1,
+        month:2,
+        "3months":3
+    };
+
+    const buttons =
+        document.querySelectorAll(".quick-btn");
+
+    if(buttonMap[type] !== undefined){
+
+        buttons[buttonMap[type]]
+            .classList.add("active");
+
+    }
+
     const start=
         document.getElementById("startDate");
 
@@ -1777,7 +2132,6 @@ function setQuickFilter(type){
     updateDashboard(reports);
 
 }
-
 window.setQuickFilter=setQuickFilter;
 
 function formatDate(date){
@@ -2014,6 +2368,80 @@ trendTotals[r.scheduledDate]+=reportTotal;
                 <td>${r.warehouse}</td>
                 <td>${r.shift}</td>
                 <td>${reportTotal}</td>
+                
+                <td>
+
+    ${
+        r.creationType==="multi-day"
+
+        ? "📋 Multi"
+
+        : r.creationType==="duplicated"
+
+        ? "🔁 Duplicado"
+
+        : "✍ Manual"
+    }
+
+</td>
+
+<td>
+    ${r.createdAt || "-"}
+</td>
+
+<td>
+    ${r.generatedFrom || r.createdFromDate || "-"}
+</td>
+
+<td>
+
+    <button
+        onclick="viewReport('${r.id}')"
+        style="
+            padding:6px 10px;
+            border:none;
+            border-radius:8px;
+            background:#4a90e2;
+            color:white;
+            font-weight:bold;
+            cursor:pointer;
+            margin-right:5px;
+        "
+    >
+        👁
+    </button>
+
+    <button
+        onclick="editReport('${r.id}')"
+        style="
+            padding:6px 10px;
+            border:none;
+            border-radius:8px;
+            background:#FFCC00;
+            font-weight:bold;
+            cursor:pointer;
+            margin-right:5px;
+        "
+    >
+        ✏️
+    </button>
+
+    <button
+        onclick="deleteReport('${r.id}')"
+        style="
+            padding:6px 10px;
+            border:none;
+            border-radius:8px;
+            background:#D40511;
+            color:white;
+            font-weight:bold;
+            cursor:pointer;
+        "
+    >
+        🗑
+    </button>
+
+</td>
 
             </tr>
 
@@ -2088,6 +2516,9 @@ async function createUser(){
         const role =
             document.getElementById("newUserRole").value;
 
+        const hashedPassword =
+            await hashPassword(password);
+
         if(
             name.trim()==="" ||
             employeeId.trim()==="" ||
@@ -2097,11 +2528,23 @@ async function createUser(){
             return;
         }
 
+        const existingUser =
+    users.find(
+        u=>u.employeeId===employeeId
+    );
+
+if(existingUser){
+
+    alert("El Employee ID ya existe");
+    return;
+
+}
+
         await setDoc(
             doc(db,"users",employeeId),
             {
                 employeeId,
-                password,
+                password:hashedPassword,
                 name,
                 role,
                 active:true,
@@ -2131,6 +2574,176 @@ async function createUser(){
 
 window.createUser=createUser;
 
+async function toggleUserStatus(employeeId,currentStatus){
+
+    try{
+
+        await setDoc(
+            doc(db,"users",employeeId),
+            {
+                ...users.find(
+                    u=>u.employeeId===employeeId
+                ),
+
+                active:!currentStatus
+            }
+        );
+
+        await loadUsers();
+
+        renderUsersTable();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Error al actualizar usuario");
+
+    }
+
+}
+
+window.toggleUserStatus=toggleUserStatus;  
+
+async function editUser(employeeId){
+
+    try{
+
+        const user=
+            users.find(
+                u=>u.employeeId===employeeId
+            );
+
+        if(!user){
+            return;
+        }
+
+        const newName=
+            prompt(
+                "Nombre:",
+                user.name
+            );
+
+        if(newName===null){
+            return;
+        }
+
+        const newPassword=
+    prompt(
+        "Nueva password (dejar vacío para no cambiar):",
+        ""
+    );
+
+        if(newPassword===null){
+            return;
+        }
+
+        const newRole=
+            prompt(
+                "Rol (admin/supervisor):",
+                user.role
+            );
+
+        if(newRole===null){
+            return;
+        }
+
+        if(
+    newRole!=="admin" &&
+    newRole!=="supervisor"
+){
+    alert("Rol inválido");
+    return;
+}
+
+        const updatedData = {
+    ...user,
+    name:newName,
+    role:newRole
+};
+
+if(newPassword.trim()!==""){
+
+    updatedData.password =
+        await hashPassword(newPassword);
+
+}
+
+await setDoc(
+    doc(db,"users",employeeId),
+    updatedData
+);
+
+        await loadUsers();
+
+        renderUsersTable();
+
+        alert("Usuario actualizado");
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Error al editar usuario");
+
+    }
+
+}
+
+window.editUser=editUser;    
+
+async function resetPassword(employeeId){
+
+    try{
+
+        const user=
+            users.find(
+                u=>u.employeeId===employeeId
+            );
+
+        if(!user){
+            return;
+        }
+
+        const tempPassword=
+            "DHL"+
+            Math.floor(
+                1000 + Math.random()*9000
+            );
+
+        await setDoc(
+            doc(db,"users",employeeId),
+            {
+                ...user,
+                password:await hashPassword(tempPassword)
+            }
+        );
+
+        await loadUsers();
+
+        renderUsersTable();
+
+        alert(
+`
+Password reseteado correctamente
+
+Nueva contraseña:
+${tempPassword}
+`
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Error al resetear password");
+
+    }
+
+}
+
+window.resetPassword=resetPassword;
+    
 function renderUsersTable(){
 
     const table =
@@ -2151,9 +2764,64 @@ function renderUsersTable(){
                 <td>${user.role}</td>
 
                 <td>
-                    ${user.active ? "✅" : "❌"}
+                    ${user.active ? "✅ Activo" : "❌ Inactivo"}
                 </td>
 
+                <td>
+
+    <button
+        onclick="toggleUserStatus('${user.employeeId}',${user.active})"
+        style="
+            padding:8px 12px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            background:${user.active ? '#ffe1e1' : '#d4ffd4'};
+            color:${user.active ? '#D40511' : '#0a7a0a'};
+            font-weight:bold;
+            margin-bottom:5px;
+        "
+    >
+        ${user.active ? 'Desactivar' : 'Activar'}
+    </button>
+
+    <br>
+
+    <button
+        onclick="editUser('${user.employeeId}')"
+        style="
+            padding:8px 12px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            background:#FFCC00;
+            font-weight:bold;
+            margin-top:5px;
+            margin-bottom:5px;
+        "
+    >
+        ✏️ Editar
+    </button>
+
+    <br>
+
+    <button
+        onclick="resetPassword('${user.employeeId}')"
+        style="
+            padding:8px 12px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            background:#D40511;
+            color:white;
+            font-weight:bold;
+            margin-top:5px;
+        "
+    >
+        🔐 Reset Password
+    </button>
+
+</td>
             </tr>
 
         `;
@@ -2171,7 +2839,13 @@ function loadReports(){
 
         snapshot.forEach(doc=>{
 
-            reports.push(doc.data());
+            reports.push({
+
+    id:doc.id,
+
+    ...doc.data()
+
+});
 
         });
 
@@ -2272,7 +2946,272 @@ function exportToExcel(){
 
 }
 
-window.exportToExcel=exportToExcel;    
+window.exportToExcel=exportToExcel;
+
+async function deleteReport(reportId){
+
+    try{
+
+        const confirmDelete=
+            confirm(
+                "¿Eliminar programación?"
+            );
+
+        if(!confirmDelete){
+            return;
+        }
+
+        await deleteDoc(
+            doc(db,"reports",reportId)
+        );
+
+        alert(
+            "Programación eliminada"
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Error al eliminar"
+        );
+
+    }
+
+}
+
+window.deleteReport=deleteReport;
+
+function editReport(reportId){
+
+    const report=
+        reports.find(
+            r=>r.id===reportId
+        );
+
+    editingReportId=reportId;
+
+    if(!report){
+        return;
+    }
+
+    /* IR A PROGRAMAR */
+
+    reportBtn.click();
+
+    /* CARGAR DATOS */
+
+    document.getElementById(
+        "scheduledDate"
+    ).value=report.scheduledDate;
+
+    selectedWarehouse=
+        report.warehouse;
+
+    selectedShift=
+        report.shift;
+
+    /* ACTIVAR NAVE */
+
+    document
+        .querySelectorAll(
+            "#warehouseSelectors .selector"
+        )
+        .forEach(el=>{
+
+            el.classList.remove("active");
+
+            if(
+                el.innerText.trim()===
+                report.warehouse
+            ){
+                el.classList.add("active");
+            }
+
+        });
+
+    /* ACTIVAR TURNO */
+
+    document
+        .querySelectorAll(".shift")
+        .forEach(el=>{
+
+            el.classList.remove("active");
+
+            if(
+                el.innerText.includes(
+                    report.shift
+                )
+            ){
+                el.classList.add("active");
+            }
+
+        });
+
+    /* CARGAR POSICIONES */
+
+    positionsData.length=0;
+
+    (report.positions || []).forEach(p=>{
+
+        positionsData.push({
+
+            id:Date.now()+Math.random(),
+
+            position:p.position,
+
+            incidents:{...p.incidents}
+
+        });
+
+    });
+
+    renderPositions();
+
+    document.getElementById(
+    "submitButtonText"
+).innerHTML=
+"💾 Actualizar Programación";
+
+    updateSummary();
+
+}
+
+window.editReport=editReport;
+
+function viewReport(reportId){
+
+    const report =
+        reports.find(r=>r.id===reportId);
+
+    if(!report){
+        return;
+    }
+
+    let html = `
+
+        <div class="summary-item">
+            <strong>Fecha</strong>
+            <span>${report.scheduledDate}</span>
+        </div>
+
+        <div class="summary-item">
+            <strong>Usuario</strong>
+            <span>${report.username}</span>
+        </div>
+
+        <div class="summary-item">
+            <strong>Nave</strong>
+            <span>${report.warehouse}</span>
+        </div>
+
+        <div class="summary-item">
+            <strong>Turno</strong>
+            <span>${report.shift}</span>
+        </div>
+
+        <br>
+
+    `;
+
+    let grandTotal = 0;
+
+    (report.positions || []).forEach(position=>{
+
+        let subtotal = 0;
+
+        let incidentsHtml = "";
+
+        incidents.forEach(incident=>{
+
+            const qty =
+                position.incidents[incident] || 0;
+
+            if(qty>0){
+
+                subtotal += qty;
+
+                grandTotal += qty;
+
+                incidentsHtml += `
+
+                    <div class="summary-item">
+                        <span>${incident}</span>
+                        <strong>${qty}</strong>
+                    </div>
+
+                `;
+
+            }
+
+        });
+
+        html += `
+
+            <div
+                style="
+                    border:1px solid #eee;
+                    border-radius:15px;
+                    padding:15px;
+                    margin-bottom:20px;
+                    background:#fafafa;
+                "
+            >
+
+                <h3>${position.position}</h3>
+
+                <br>
+
+                ${incidentsHtml}
+
+                <div class="summary-item">
+                    <strong>Subtotal</strong>
+                    <strong>${subtotal}</strong>
+                </div>
+
+            </div>
+
+        `;
+
+    });
+
+    html += `
+
+        <div
+            style="
+                background:#D40511;
+                color:white;
+                padding:20px;
+                border-radius:15px;
+                text-align:center;
+                font-size:22px;
+                font-weight:bold;
+            "
+        >
+            Total Programado: ${grandTotal}
+        </div>
+
+    `;
+
+    document.getElementById("detailContent").innerHTML =
+        html;
+
+    document.getElementById("detailModal").style.display =
+        "flex";
+
+}
+
+window.viewReport=viewReport;
+
+function closeDetailModal(){
+
+    document.getElementById("detailModal").style.display =
+        "none";
+
+}
+
+window.closeDetailModal=closeDetailModal;    
 
 </script>
 
