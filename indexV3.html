@@ -2160,7 +2160,79 @@ async function toggleUserStatus(employeeId,currentStatus){
 
 }
 
-window.toggleUserStatus=toggleUserStatus;    
+window.toggleUserStatus=toggleUserStatus;  
+
+async function editUser(employeeId){
+
+    try{
+
+        const user=
+            users.find(
+                u=>u.employeeId===employeeId
+            );
+
+        if(!user){
+            return;
+        }
+
+        const newName=
+            prompt(
+                "Nombre:",
+                user.name
+            );
+
+        if(newName===null){
+            return;
+        }
+
+        const newPassword=
+            prompt(
+                "Password:",
+                user.password
+            );
+
+        if(newPassword===null){
+            return;
+        }
+
+        const newRole=
+            prompt(
+                "Rol (admin/supervisor):",
+                user.role
+            );
+
+        if(newRole===null){
+            return;
+        }
+
+        await setDoc(
+            doc(db,"users",employeeId),
+            {
+                ...user,
+
+                name:newName,
+                password:newPassword,
+                role:newRole
+            }
+        );
+
+        await loadUsers();
+
+        renderUsersTable();
+
+        alert("Usuario actualizado");
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Error al editar usuario");
+
+    }
+
+}
+
+window.editUser=editUser;    
 
 function renderUsersTable(){
 
@@ -2201,6 +2273,24 @@ function renderUsersTable(){
                     >
 
                         ${user.active ? 'Desactivar' : 'Activar'}
+
+                        <br><br>
+
+                            <button
+                                  onclick="editUser('${user.employeeId}')"
+                                  style="
+                                  padding:8px 12px;
+                                  border:none;
+                                  border-radius:8px;
+                                  cursor:pointer;
+                                  background:#FFCC00;
+                                  font-weight:bold;
+                                  "
+                                  >
+
+                                  ✏️ Editar
+
+                                </button>
 
                     </button>
 
