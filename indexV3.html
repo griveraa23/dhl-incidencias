@@ -874,6 +874,62 @@ header h1{
     Programación guardada correctamente
 </div>
 
+    <!-- MODAL DETALLE -->
+
+<div id="detailModal"
+    style="
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.6);
+        z-index:99999;
+        justify-content:center;
+        align-items:center;
+        padding:20px;
+    ">
+
+    <div
+        style="
+            background:white;
+            width:100%;
+            max-width:900px;
+            max-height:90vh;
+            overflow:auto;
+            border-radius:20px;
+            padding:25px;
+            position:relative;
+        "
+    >
+
+        <button
+            onclick="closeDetailModal()"
+            style="
+                position:absolute;
+                top:15px;
+                right:15px;
+                border:none;
+                background:#D40511;
+                color:white;
+                width:35px;
+                height:35px;
+                border-radius:50%;
+                cursor:pointer;
+                font-weight:bold;
+            "
+        >
+            X
+        </button>
+
+        <h2>📋 Detalle de Programación</h2>
+
+        <br>
+
+        <div id="detailContent"></div>
+
+    </div>
+
+</div>
+
 <script type="module">
 
 import { initializeApp }
@@ -2097,6 +2153,22 @@ trendTotals[r.scheduledDate]+=reportTotal;
 <td>
 
     <button
+        onclick="viewReport('${r.id}')"
+        style="
+            padding:6px 10px;
+            border:none;
+            border-radius:8px;
+            background:#4a90e2;
+            color:white;
+            font-weight:bold;
+            cursor:pointer;
+            margin-right:5px;
+        "
+    >
+        👁
+    </button>
+
+    <button
         onclick="editReport('${r.id}')"
         style="
             padding:6px 10px;
@@ -2753,7 +2825,140 @@ function editReport(reportId){
 
 }
 
-window.editReport=editReport;    
+window.editReport=editReport;
+
+function viewReport(reportId){
+
+    const report =
+        reports.find(r=>r.id===reportId);
+
+    if(!report){
+        return;
+    }
+
+    let html = `
+
+        <div class="summary-item">
+            <strong>Fecha</strong>
+            <span>${report.scheduledDate}</span>
+        </div>
+
+        <div class="summary-item">
+            <strong>Usuario</strong>
+            <span>${report.username}</span>
+        </div>
+
+        <div class="summary-item">
+            <strong>Nave</strong>
+            <span>${report.warehouse}</span>
+        </div>
+
+        <div class="summary-item">
+            <strong>Turno</strong>
+            <span>${report.shift}</span>
+        </div>
+
+        <br>
+
+    `;
+
+    let grandTotal = 0;
+
+    (report.positions || []).forEach(position=>{
+
+        let subtotal = 0;
+
+        let incidentsHtml = "";
+
+        incidents.forEach(incident=>{
+
+            const qty =
+                position.incidents[incident] || 0;
+
+            if(qty>0){
+
+                subtotal += qty;
+
+                grandTotal += qty;
+
+                incidentsHtml += `
+
+                    <div class="summary-item">
+                        <span>${incident}</span>
+                        <strong>${qty}</strong>
+                    </div>
+
+                `;
+
+            }
+
+        });
+
+        html += `
+
+            <div
+                style="
+                    border:1px solid #eee;
+                    border-radius:15px;
+                    padding:15px;
+                    margin-bottom:20px;
+                    background:#fafafa;
+                "
+            >
+
+                <h3>${position.position}</h3>
+
+                <br>
+
+                ${incidentsHtml}
+
+                <div class="summary-item">
+                    <strong>Subtotal</strong>
+                    <strong>${subtotal}</strong>
+                </div>
+
+            </div>
+
+        `;
+
+    });
+
+    html += `
+
+        <div
+            style="
+                background:#D40511;
+                color:white;
+                padding:20px;
+                border-radius:15px;
+                text-align:center;
+                font-size:22px;
+                font-weight:bold;
+            "
+        >
+            Total Programado: ${grandTotal}
+        </div>
+
+    `;
+
+    document.getElementById("detailContent").innerHTML =
+        html;
+
+    document.getElementById("detailModal").style.display =
+        "flex";
+
+}
+
+window.viewReport=viewReport;
+
+function closeDetailModal(){
+
+    document.getElementById("detailModal").style.display =
+        "none";
+
+}
+
+window.closeDetailModal=closeDetailModal;    
 
 </script>
 
