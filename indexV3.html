@@ -659,9 +659,11 @@ header h1{
                         <th>Nave</th>
                         <th>Turno</th>
                         <th>Total</th>
+
+                        <th>Tipo</th>
                         
                         <th>Acciones</th>
-
+                        
                     </tr>
 
                 </thead>
@@ -1654,6 +1656,7 @@ if(invalidPosition){
     shift:selectedShift,
     positions:positionsData,
     total,
+    creationType,
     timestamp:Date.now()
 
 };
@@ -1680,6 +1683,16 @@ if(editingReportId!==null){
 }else{
 
     /* CREAR MULTIPLES DIAS */
+
+    const creationType =
+
+    document.querySelectorAll(
+        ".multiDay:checked"
+    ).length>0
+
+    ? "multi-day"
+
+    : "manual";
 
     const checkedDays = [
 
@@ -1794,7 +1807,11 @@ document
     .querySelectorAll(".shift")
     .forEach(el=>el.classList.remove("active"));
 
-    updateSummary();
+document
+    .querySelectorAll(".multiDay")
+    .forEach(cb=>cb.checked=false);
+
+updateSummary();
 
 }
 
@@ -2260,6 +2277,22 @@ trendTotals[r.scheduledDate]+=reportTotal;
                 <td>${r.warehouse}</td>
                 <td>${r.shift}</td>
                 <td>${reportTotal}</td>
+                
+                <td>
+
+    ${
+        r.creationType==="multi-day"
+
+        ? "📋 Multi"
+
+        : r.creationType==="duplicated"
+
+        ? "🔁 Duplicado"
+
+        : "✍ Manual"
+    }
+
+</td>
 
 <td>
 
