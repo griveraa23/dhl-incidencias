@@ -1647,30 +1647,20 @@ if(invalidPosition){
             return;
         }
 
-        const reportData={
+        const reportDataBase={
 
     username,
     warehouse:selectedWarehouse,
     shift:selectedShift,
     positions:positionsData,
     total,
-    scheduledDate,
     timestamp:Date.now()
 
 };
 
-/* NUEVO */
+/* EDITAR */
 
-if(editingReportId===null){
-
-    await addDoc(
-        collection(db,"reports"),
-        reportData
-    );
-
-}else{
-
-    /* EDITAR */
+if(editingReportId!==null){
 
     await setDoc(
 
@@ -1680,9 +1670,78 @@ if(editingReportId===null){
             editingReportId
         ),
 
-        reportData
+        {
+            ...reportDataBase,
+            scheduledDate
+        }
 
     );
+
+}else{
+
+    /* CREAR MULTIPLES DIAS */
+
+    const checkedDays = [
+
+        ...document.querySelectorAll(
+            ".multiDay:checked"
+        )
+
+    ].map(cb=>parseInt(cb.value));
+
+    /* SI NO SELECCIONA DIAS
+       SOLO GUARDA FECHA NORMAL */
+
+    if(checkedDays.length===0){
+
+        await addDoc(
+            collection(db,"reports"),
+            {
+                ...reportDataBase,
+                scheduledDate
+            }
+        );
+
+    }else{
+
+        const baseDate =
+            new Date(
+                scheduledDate+"T00:00:00"
+            );
+
+        /* OBTENER DOMINGO */
+
+        const sunday =
+            new Date(baseDate);
+
+        sunday.setDate(
+            baseDate.getDate() -
+            baseDate.getDay()
+        );
+
+        for(const day of checkedDays){
+
+            const newDate =
+                new Date(sunday);
+
+            newDate.setDate(
+                sunday.getDate()+day
+            );
+
+            const formattedDate =
+                formatDate(newDate);
+
+            await addDoc(
+                collection(db,"reports"),
+                {
+                    ...reportDataBase,
+                    scheduledDate:formattedDate
+                }
+            );
+
+        }
+
+    }
 
 }
 
