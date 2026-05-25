@@ -661,6 +661,10 @@ header h1{
                         <th>Total</th>
 
                         <th>Tipo</th>
+
+                        <th>Creado</th>
+
+                        <th>Origen</th>
                         
                         <th>Acciones</th>
                         
@@ -1649,15 +1653,39 @@ if(invalidPosition){
             return;
         }
 
-        const reportDataBase={
+        const creationType =
+
+    document.querySelectorAll(
+        ".multiDay:checked"
+    ).length>0
+
+    ? "multi-day"
+
+    : "manual";
+
+        const creationTimestamp = Date.now();
+
+const reportDataBase={
 
     username,
     warehouse:selectedWarehouse,
     shift:selectedShift,
     positions:positionsData,
     total,
+
     creationType,
-    timestamp:Date.now()
+
+    timestamp:creationTimestamp,
+
+    createdAt:
+        new Date(creationTimestamp)
+            .toLocaleString(),
+
+    createdFromDate:
+        scheduledDate,
+
+    createdBy:
+        currentUser.employeeId
 
 };
 
@@ -1684,15 +1712,6 @@ if(editingReportId!==null){
 
     /* CREAR MULTIPLES DIAS */
 
-    const creationType =
-
-    document.querySelectorAll(
-        ".multiDay:checked"
-    ).length>0
-
-    ? "multi-day"
-
-    : "manual";
 
     const checkedDays = [
 
@@ -1707,13 +1726,7 @@ if(editingReportId!==null){
 
     if(checkedDays.length===0){
 
-        await addDoc(
-            collection(db,"reports"),
-            {
-                ...reportDataBase,
-                scheduledDate
-            }
-        );
+        collection(db,"reports"),
 
     }else{
 
@@ -2292,6 +2305,14 @@ trendTotals[r.scheduledDate]+=reportTotal;
         : "✍ Manual"
     }
 
+</td>
+
+<td>
+    ${r.createdAt || "-"}
+</td>
+
+<td>
+    ${r.generatedFrom || r.createdFromDate || "-"}
 </td>
 
 <td>
