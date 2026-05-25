@@ -1257,7 +1257,7 @@ updateClock();
 
 document.getElementById("dashboardBtn").onclick=()=>{
 
-    usersBtn.classList.remove("active");
+    usersBtnElement.classList.remove("active");
 
     dashboardBtn.classList.add("active");
     reportBtn.classList.remove("active");
@@ -1270,7 +1270,7 @@ document.getElementById("dashboardBtn").onclick=()=>{
 
 reportBtn.onclick=()=>{
 
-    usersBtn.classList.remove("active");
+    usersBtnElement.classList.remove("active");
 
     reportBtn.classList.add("active");
     dashboardBtn.classList.remove("active");
@@ -1721,53 +1721,59 @@ if(editingReportId!==null){
 
     ].map(cb=>parseInt(cb.value));
 
-    /* SI NO SELECCIONA DIAS
-       SOLO GUARDA FECHA NORMAL */
+/* SI NO SELECCIONA DÍAS
+   SOLO GUARDA LA FECHA NORMAL */
 
-    if(checkedDays.length===0){
+if(checkedDays.length===0){
 
+    await addDoc(
         collection(db,"reports"),
+        {
+            ...reportDataBase,
+            scheduledDate
+        }
+    );
 
-    }else{
+}else{
 
-        const baseDate =
-            new Date(
-                scheduledDate+"T00:00:00"
-            );
-
-        /* OBTENER DOMINGO */
-
-        const sunday =
-            new Date(baseDate);
-
-        sunday.setDate(
-            baseDate.getDate() -
-            baseDate.getDay()
+    const baseDate =
+        new Date(
+            scheduledDate + "T00:00:00"
         );
 
-        for(const day of checkedDays){
+    /* OBTENER DOMINGO */
 
-            const newDate =
-                new Date(sunday);
+    const sunday =
+        new Date(baseDate);
 
-            newDate.setDate(
-                sunday.getDate()+day
-            );
+    sunday.setDate(
+        baseDate.getDate() -
+        baseDate.getDay()
+    );
 
-            const formattedDate =
-                formatDate(newDate);
+    for(const day of checkedDays){
 
-            await addDoc(
-                collection(db,"reports"),
-                {
-                    ...reportDataBase,
-                    scheduledDate:formattedDate
-                }
-            );
+        const newDate =
+            new Date(sunday);
 
-        }
+        newDate.setDate(
+            sunday.getDate() + day
+        );
+
+        const formattedDate =
+            formatDate(newDate);
+
+        await addDoc(
+            collection(db,"reports"),
+            {
+                ...reportDataBase,
+                scheduledDate: formattedDate
+            }
+        );
 
     }
+
+}
 
 }
 
