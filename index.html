@@ -669,7 +669,7 @@ header h1{
 
                         <th>Fecha de Captura</th>
 
-                        <th>Origen</th>
+                        <th>Generado desde</th>
                         
                         <th>Acciones</th>
                         
@@ -1696,6 +1696,37 @@ if(invalidPosition){
 
             },0);
 
+        /* VALIDAR DUPLICADOS */
+
+const duplicatedReport = reports.find(r =>
+
+    r.scheduledDate === scheduledDate &&
+    r.warehouse === selectedWarehouse &&
+    r.shift === selectedShift &&
+    r.id !== editingReportId
+
+);
+
+if(duplicatedReport){
+
+    alert(
+`
+Ya existe una programación para:
+
+📅 ${scheduledDate}
+🏭 ${selectedWarehouse}
+🔄 ${selectedShift}
+
+Verifica antes de guardar.
+`
+    );
+
+    submitButton.disabled=false;
+
+    return;
+
+}
+
         if(total===0){
             alert("Agrega incidencias");
             return;
@@ -2390,7 +2421,23 @@ trendTotals[r.scheduledDate]+=reportTotal;
 </td>
 
 <td>
-    ${r.generatedFrom || r.createdFromDate || "-"}
+
+${
+    r.creationType==="manual"
+
+    ? "-"
+
+    : r.creationType==="multi-day"
+
+    ? (r.createdFromDate || "-")
+
+    : r.creationType==="duplicated"
+
+    ? (r.generatedFrom || "-")
+
+    : "-"
+}
+
 </td>
 
 <td>
