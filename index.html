@@ -1730,6 +1730,70 @@ function updateSummary(){
 
 addPositionBlock();
 
+function buildDetailedChanges(oldReport,newReport){
+
+    const changes=[];
+
+    function buildMap(report){
+
+        const map={};
+
+        (report.positions || []).forEach(p=>{
+
+            incidents.forEach(i=>{
+
+                const qty=p.incidents[i] || 0;
+
+                const key=`${p.position}||${i}`;
+
+                if(!map[key]){
+                    map[key]=0;
+                }
+
+                map[key]+=qty;
+
+            });
+
+        });
+
+        return map;
+
+    }
+
+    const oldMap=buildMap(oldReport);
+    const newMap=buildMap(newReport);
+
+    const allKeys=[
+        ...new Set([
+            ...Object.keys(oldMap),
+            ...Object.keys(newMap)
+        ])
+    ];
+
+    allKeys.forEach(key=>{
+
+        const oldValue=oldMap[key] || 0;
+        const newValue=newMap[key] || 0;
+
+        if(oldValue!==newValue){
+
+            const parts=key.split("||");
+
+            changes.push({
+                position:parts[0],
+                incident:parts[1],
+                before:oldValue,
+                after:newValue
+            });
+
+        }
+
+    });
+
+    return changes;
+
+}    
+
 async function submitReport(){
 
     const submitButton =
@@ -1839,35 +1903,20 @@ Verifica antes de guardar.
         const originalReport =
             reports.find(r=>r.id===editingReportId);
 
-        let changeSummary = [];
+       let changeSummary = [];
 
-        if(originalReport){
+if(originalReport){
 
-            if(originalReport.scheduledDate !== scheduledDate){
-                changeSummary.push(
-                    `Fecha: ${originalReport.scheduledDate} → ${scheduledDate}`
-                );
+    changeSummary =
+        buildDetailedChanges(
+            originalReport,
+            {
+                ...reportDataBase,
+                scheduledDate
             }
+        );
 
-            if(originalReport.warehouse !== selectedWarehouse){
-                changeSummary.push(
-                    `Nave: ${originalReport.warehouse} → ${selectedWarehouse}`
-                );
-            }
-
-            if(originalReport.shift !== selectedShift){
-                changeSummary.push(
-                    `Turno: ${originalReport.shift} → ${selectedShift}`
-                );
-            }
-
-            if(originalReport.total !== total){
-                changeSummary.push(
-                    `Total: ${originalReport.total} → ${total}`
-                );
-            }
-
-        }
+}
 
         if(editingReportId!==null){
 
@@ -1875,15 +1924,15 @@ Verifica antes de guardar.
                 originalReport?.auditLog || [];
 
             const auditItem = {
-                action:"updated",
-                userId:currentUser.employeeId,
-                userName:currentUser.name,
-                date:new Date().toLocaleString(),
-                changes:
-                    changeSummary.length>0
-                    ? changeSummary.join(" | ")
-                    : "Edición sin cambios principales"
-            };
+    action:"updated",
+    userId:currentUser.employeeId,
+    userName:currentUser.name,
+    date:new Date().toLocaleString(),
+    changes:
+        changeSummary.length>0
+        ? changeSummary
+        : "Edición sin cambios en puestos/incidencias"
+};
 
             await setDoc(
                 doc(db,"reports",editingReportId),
@@ -3441,10 +3490,30 @@ function viewReport(reportId){
                         <span>${item.date || "-"}</span>
                     </div>
 
-                    <div class="summary-item">
-                        <strong>Cambios</strong>
-                        <span>${item.changes || "-"}</span>
-                    </div>
+                    <div>
+    <strong>Cambios</strong>
+
+    <br><br>
+
+    ${
+        Array.isArray(item.changes)
+
+        ? item.changes.map(change=>`
+
+            <div class="summary-item">
+                <span>
+                    ${change.position} / ${change.incident}
+                </span>
+                <strong>
+                    ${change.before} → ${change.after}
+                </strong>
+            </div>
+
+        `).join("")
+
+        : `<span>${item.changes || "-"}</span>`
+    }
+</div>
 
                 </div>
 
