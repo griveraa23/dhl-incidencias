@@ -543,6 +543,24 @@ header h1{
             Usuario o contraseña incorrectos
         </div>
 
+        <br>
+
+<div style="text-align:center;">
+    <button
+        onclick="openRecoveryModal()"
+        style="
+            border:none;
+            background:none;
+            color:#D40511;
+            font-weight:bold;
+            cursor:pointer;
+            text-decoration:underline;
+        "
+    >
+        ¿Olvidaste tu contraseña?
+    </button>
+</div>
+
     </div>
 
 </div>
@@ -795,9 +813,14 @@ header h1{
             </div>
 
             <div>
-                <label>Password</label>
-                <input type="password" id="newPassword">
-            </div>
+    <label>Password</label>
+    <input type="password" id="newPassword">
+</div>
+
+<div>
+    <label>PIN Recuperación</label>
+    <input type="password" id="newRecoveryPin" maxlength="6">
+</div>
 
             <div>
                 <label>Rol</label>
@@ -1081,6 +1104,173 @@ header h1{
 
 </div>
 
+<!-- MODAL RESET PASSWORD -->
+
+<div id="resetPasswordModal"
+    style="
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.6);
+        z-index:999999;
+        justify-content:center;
+        align-items:center;
+        padding:20px;
+    "
+>
+    <div
+        style="
+            background:white;
+            width:100%;
+            max-width:420px;
+            border-radius:22px;
+            padding:25px;
+            box-shadow:0 8px 30px rgba(0,0,0,.25);
+        "
+    >
+        <h2 style="color:#D40511;">
+            🔐 Password Temporal
+        </h2>
+
+        <br>
+
+        <p>
+            Entrega esta contraseña temporal al usuario.
+        </p>
+
+        <br>
+
+        <input
+            type="text"
+            id="temporaryPasswordOutput"
+            readonly
+            style="
+                width:100%;
+                padding:14px;
+                border-radius:12px;
+                border:2px solid #FFCC00;
+                font-size:20px;
+                font-weight:bold;
+                text-align:center;
+            "
+        >
+
+        <br><br>
+
+        <button
+            onclick="copyTemporaryPassword()"
+            class="submit-btn"
+        >
+            📋 Copiar Password
+        </button>
+
+        <button
+            onclick="closeResetPasswordModal()"
+            class="remove-btn"
+            style="width:100%; margin-top:10px;"
+        >
+            Cerrar
+        </button>
+    </div>
+</div>
+
+<!-- MODAL RECOVERY PASSWORD -->
+
+<div id="recoveryModal"
+    style="
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.6);
+        z-index:999999;
+        justify-content:center;
+        align-items:center;
+        padding:20px;
+    "
+>
+    <div
+        style="
+            background:white;
+            width:100%;
+            max-width:430px;
+            border-radius:22px;
+            padding:25px;
+        "
+    >
+        <h2 style="color:#D40511;">🔐 Recuperar Password</h2>
+
+        <br>
+
+        <label>Employee ID</label>
+        <input type="text" id="recoveryEmployeeId"
+            style="width:100%; padding:14px; border-radius:12px; border:1px solid #ccc;">
+
+        <br><br>
+
+        <label>Recovery PIN</label>
+        <input type="password" id="recoveryPin"
+            style="width:100%; padding:14px; border-radius:12px; border:1px solid #ccc;">
+
+        <br><br>
+
+        <button class="submit-btn" onclick="processRecoveryPassword()">
+            Generar Password Temporal
+        </button>
+
+        <button class="remove-btn" onclick="closeRecoveryModal()"
+            style="width:100%; margin-top:10px;">
+            Cancelar
+        </button>
+    </div>
+</div>
+
+<!-- MODAL CAMBIO OBLIGATORIO PASSWORD -->
+
+<div id="changePasswordModal"
+    style="
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.6);
+        z-index:999999;
+        justify-content:center;
+        align-items:center;
+        padding:20px;
+    "
+>
+    <div style="
+        background:white;
+        width:100%;
+        max-width:430px;
+        border-radius:22px;
+        padding:25px;
+    ">
+        <h2 style="color:#D40511;">🔐 Cambiar Password</h2>
+
+        <br>
+
+        <p>Debes cambiar tu contraseña temporal para continuar.</p>
+
+        <br>
+
+        <label>Nueva contraseña</label>
+        <input type="password" id="forcedNewPassword"
+            style="width:100%; padding:14px; border-radius:12px; border:1px solid #ccc;">
+
+        <br><br>
+
+        <label>Confirmar contraseña</label>
+        <input type="password" id="forcedConfirmPassword"
+            style="width:100%; padding:14px; border-radius:12px; border:1px solid #ccc;">
+
+        <br><br>
+
+        <button class="submit-btn" onclick="saveForcedPassword()">
+            Guardar nueva contraseña
+        </button>
+    </div>
+</div>    
+
 <script type="module">
 
 import { initializeApp }
@@ -1094,7 +1284,8 @@ import {
     getDocs,
     setDoc,
     doc,
-    deleteDoc
+    deleteDoc,
+    updateDoc
 }
     
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -1261,17 +1452,164 @@ async function login(){
 
     currentUser = user;
 
-    localStorage.setItem(
-        "dhlUser",
-        JSON.stringify(user)
-    );
+if(user.mustChangePassword===true){
 
-    startSession();
+    document
+        .getElementById("loginScreen")
+        .style.display="none";
+
+    document
+        .getElementById("changePasswordModal")
+        .style.display="flex";
+
+    return;
+
+}
+
+localStorage.setItem(
+    "dhlUser",
+    JSON.stringify(user)
+);
+
+startSession();
 
 }
 
 window.login = login;
 
+async function saveForcedPassword(){
+
+    const newPassword =
+        document.getElementById("forcedNewPassword").value;
+
+    const confirmPassword =
+        document.getElementById("forcedConfirmPassword").value;
+
+    if(
+        newPassword.trim()==="" ||
+        confirmPassword.trim()===""
+    ){
+        alert("Completa ambos campos");
+        return;
+    }
+
+    if(newPassword!==confirmPassword){
+        alert("Las contraseñas no coinciden");
+        return;
+    }
+
+    if(newPassword.length<6){
+        alert("La contraseña debe tener mínimo 6 caracteres");
+        return;
+    }
+
+    await updateDoc(
+        doc(db,"users",currentUser.employeeId),
+        {
+            password:await hashPassword(newPassword),
+            mustChangePassword:false,
+            passwordChangedAt:new Date().toLocaleString()
+        }
+    );
+
+    currentUser.mustChangePassword=false;
+
+    localStorage.setItem(
+        "dhlUser",
+        JSON.stringify(currentUser)
+    );
+
+    document
+        .getElementById("changePasswordModal")
+        .style.display="none";
+
+    startSession();
+
+}
+
+window.saveForcedPassword=saveForcedPassword;    
+
+function openRecoveryModal(){
+
+    document.getElementById("recoveryEmployeeId").value="";
+    document.getElementById("recoveryPin").value="";
+
+    document.getElementById("recoveryModal")
+        .style.display="flex";
+
+}
+
+window.openRecoveryModal=openRecoveryModal;
+
+function closeRecoveryModal(){
+
+    document.getElementById("recoveryModal")
+        .style.display="none";
+
+}
+
+window.closeRecoveryModal=closeRecoveryModal;
+
+async function processRecoveryPassword(){
+
+    const employeeId =
+        document.getElementById("recoveryEmployeeId").value;
+
+    const recoveryPin =
+        document.getElementById("recoveryPin").value;
+
+    if(
+        employeeId.trim()==="" ||
+        recoveryPin.trim()===""
+    ){
+        alert("Ingresa Employee ID y Recovery PIN");
+        return;
+    }
+
+    const user =
+        users.find(u=>u.employeeId===employeeId);
+
+    if(!user){
+        alert("Usuario no encontrado");
+        return;
+    }
+
+    const hashedPin =
+        await hashPassword(recoveryPin);
+
+    if(user.recoveryPin!==hashedPin){
+        alert("Recovery PIN incorrecto");
+        return;
+    }
+
+    const tempPassword =
+        "DHL" + Math.floor(1000 + Math.random()*9000);
+
+    await updateDoc(
+        doc(db,"users",employeeId),
+        {
+            password:await hashPassword(tempPassword),
+            mustChangePassword:true,
+            lastRecoveryAt:new Date().toLocaleString()
+        }
+    );
+
+    await loadUsers();
+
+    closeRecoveryModal();
+
+    document.getElementById(
+        "temporaryPasswordOutput"
+    ).value=tempPassword;
+
+    document.getElementById(
+        "resetPasswordModal"
+    ).style.display="flex";
+
+}
+
+window.processRecoveryPassword=processRecoveryPassword;
+    
 function startSession(){
 
     document
@@ -2727,17 +3065,25 @@ async function createUser(){
         const role =
             document.getElementById("newUserRole").value;
 
+        const recoveryPin =
+            document.getElementById("newRecoveryPin").value;
+
         const hashedPassword =
             await hashPassword(password);
 
+        const hashedRecoveryPin =
+            await hashPassword(recoveryPin);
+
+
         if(
-            name.trim()==="" ||
-            employeeId.trim()==="" ||
-            password.trim()===""
-        ){
-            alert("Completa todos los campos");
-            return;
-        }
+    name.trim()==="" ||
+    employeeId.trim()==="" ||
+    password.trim()==="" ||
+    recoveryPin.trim()===""
+){
+    alert("Completa todos los campos");
+    return;
+}
 
         const existingUser =
     users.find(
@@ -2751,23 +3097,26 @@ if(existingUser){
 
 }
 
-        await setDoc(
-            doc(db,"users",employeeId),
-            {
-                employeeId,
-                password:hashedPassword,
-                name,
-                role,
-                active:true,
-                warehouses:[]
-            }
-        );
+       await setDoc(
+    doc(db,"users",employeeId),
+    {
+        employeeId,
+        password:hashedPassword,
+        recoveryPin:hashedRecoveryPin,
+        mustChangePassword:false,
+        name,
+        role,
+        active:true,
+        warehouses:[]
+    }
+);
 
         alert("Usuario creado correctamente");
 
         document.getElementById("newUserName").value="";
         document.getElementById("newEmployeeId").value="";
         document.getElementById("newPassword").value="";
+        document.getElementById("newRecoveryPin").value="";
 
         await loadUsers();
 
@@ -2926,7 +3275,11 @@ async function resetPassword(employeeId){
             doc(db,"users",employeeId),
             {
                 ...user,
-                password:await hashPassword(tempPassword)
+                password:await hashPassword(tempPassword),
+mustChangePassword:true,
+lastResetBy:currentUser.employeeId,
+lastResetByName:currentUser.name,
+lastResetAt:new Date().toLocaleString()
             }
         );
 
@@ -2934,14 +3287,13 @@ async function resetPassword(employeeId){
 
         renderUsersTable();
 
-        alert(
-`
-Password reseteado correctamente
+       document.getElementById(
+    "temporaryPasswordOutput"
+).value=tempPassword;
 
-Nueva contraseña:
-${tempPassword}
-`
-        );
+document.getElementById(
+    "resetPasswordModal"
+).style.display="flex";
 
     }catch(error){
 
@@ -2954,6 +3306,31 @@ ${tempPassword}
 }
 
 window.resetPassword=resetPassword;
+
+function closeResetPasswordModal(){
+
+    document.getElementById(
+        "resetPasswordModal"
+    ).style.display="none";
+
+}
+
+window.closeResetPasswordModal=closeResetPasswordModal;
+
+function copyTemporaryPassword(){
+
+    const password =
+        document.getElementById(
+            "temporaryPasswordOutput"
+        ).value;
+
+    navigator.clipboard.writeText(password);
+
+    alert("Password copiado al portapapeles");
+
+}
+
+window.copyTemporaryPassword=copyTemporaryPassword;    
     
 function renderUsersTable(){
 
