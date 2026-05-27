@@ -321,6 +321,17 @@ header h1{
     font-weight:bold;
 }
 
+.incident-input{
+    width:100%;
+    max-width:110px;
+    padding:10px;
+    border-radius:12px;
+    border:2px solid #ddd;
+    text-align:center;
+    font-size:24px;
+    font-weight:bold;
+}    
+
 .add-position-btn{
     padding:14px 20px;
     border:none;
@@ -1895,21 +1906,16 @@ function renderPositions(){
 
                     <div class="counter">
 
-                        <button class="minus"
-                            onclick="changeCount('${block.id}','${type}',-1)">
-                            -
-                        </button>
+    <input
+        type="number"
+        inputmode="numeric"
+        min="0"
+        value="${block.incidents[type]}"
+        onchange="setIncidentCount('${block.id}','${type}',this.value)"
+        class="incident-input"
+    >
 
-                        <div class="count">
-                            ${block.incidents[type]}
-                        </div>
-
-                        <button class="plus"
-                            onclick="changeCount('${block.id}','${type}',1)">
-                            +
-                        </button>
-
-                    </div>
+</div>
 
                 </div>
 
@@ -1997,6 +2003,26 @@ function changeCount(id,incident,qty){
 }
 
 window.changeCount=changeCount;
+
+function setIncidentCount(id,incident,value){
+
+    const block =
+        positionsData.find(x=>x.id==id);
+
+    let numberValue =
+        parseInt(value);
+
+    if(isNaN(numberValue) || numberValue<0){
+        numberValue=0;
+    }
+
+    block.incidents[incident]=numberValue;
+
+    renderPositions();
+
+}
+
+window.setIncidentCount=setIncidentCount;    
 
 function removePosition(id){
 
