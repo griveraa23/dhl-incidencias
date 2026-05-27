@@ -399,9 +399,6 @@ header h1{
     border-left:8px solid #D40511;
 }
 
-.insight-box.wide{
-    grid-column:1/-1;
-}
 
 .insight-title{
     font-size:14px;
@@ -429,6 +426,77 @@ header h1{
     position:relative;
     height:320px;
     width:100%;
+}
+
+.matrix-card{
+    grid-column:1/-1;
+}
+
+.matrix-container{
+    width:100%;
+    overflow:auto;
+    max-height:420px;
+}
+
+.matrix-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1100px;
+}
+
+.matrix-table th,
+.matrix-table td{
+    padding:10px;
+    border:1px solid #eee;
+    text-align:center;
+    font-size:13px;
+}
+
+.matrix-table th{
+    background:#D40511;
+    color:white;
+    position:sticky;
+    top:0;
+    z-index:2;
+}
+
+.matrix-table td:first-child,
+.matrix-table th:first-child{
+    position:sticky;
+    left:0;
+    background:white;
+    color:#333;
+    font-weight:bold;
+    z-index:3;
+}
+
+.matrix-table th:first-child{
+    background:#FFCC00;
+    color:#D40511;
+}
+
+.matrix-cell{
+    font-weight:bold;
+    border-radius:8px;
+}
+
+.matrix-zero{
+    color:#bbb;
+}
+
+.matrix-low{
+    background:#fff4cc;
+    color:#7a5b00;
+}
+
+.matrix-mid{
+    background:#ffd6d6;
+    color:#9b0000;
+}
+
+.matrix-high{
+    background:#D40511;
+    color:white;
 }    
     
 .history-table{
@@ -802,7 +870,7 @@ header h1{
             </div>
         </div>
 
-        <div class="insight-box wide">
+        <div class="insight-box">
             <div class="insight-title">
                 🔥 Top incidencias críticas
             </div>
@@ -821,20 +889,20 @@ header h1{
 
         <div class="charts-grid">
 
-    <div class="chart-card">
+    <div class="chart-card matrix-card">
 
-        <h2>📈 Incidencias</h2>
+    <h2>🧩 Matriz Operativa Nave vs Incidencia</h2>
 
-        <br>
+    <br>
 
-        <div class="chart-container">
-           <div style="height:350px;">
-    <canvas id="lineChart"></canvas>
-</div>
-        </div>
-
+    <div class="matrix-container">
+        <table class="matrix-table">
+            <thead id="matrixHead"></thead>
+            <tbody id="matrixBody"></tbody>
+        </table>
     </div>
 
+</div>
     <div class="chart-card">
 
         <h2>🏭 Incidencias por Nave</h2>
@@ -848,6 +916,18 @@ header h1{
         </div>
 
     </div>
+
+<div class="chart-card">
+
+    <h2>💵 Costo por Nave</h2>
+
+    <br>
+
+    <div class="chart-container">
+        <canvas id="costChart"></canvas>
+    </div>
+
+</div>            
 
     <div class="chart-card">
 
@@ -2578,42 +2658,6 @@ function showToast(){
 
 }
 
-const lineChart=new Chart(
-    document.getElementById("lineChart"),
-    {
-        type:"line",
-
-        data:{
-            labels:incidents,
-
-            datasets:[{
-                label:"Incidencias",
-                data:new Array(incidents.length).fill(0),
-                borderColor:"#D40511",
-                backgroundColor:"rgba(212,5,17,0.2)",
-                fill:true,
-                tension:0.4,
-                pointRadius:5,
-                pointHoverRadius:7
-            }]
-        },
-
-        options:{
-            responsive:true,
-            maintainAspectRatio:false,
-
-            scales:{
-                y:{
-                    beginAtZero:true,
-                    ticks:{
-                        precision:0,
-                        stepSize:1
-                    }
-                }
-            }
-        }
-    }
-);
 
 const barChart=new Chart(
     document.getElementById("barChart"),
@@ -2629,6 +2673,63 @@ const barChart=new Chart(
         }
     }
 );
+
+const costChart=new Chart(
+    document.getElementById("costChart"),
+    {
+        type:"bar",
+
+        data:{
+            labels:warehouses,
+
+            datasets:[{
+                label:"Costo",
+
+                data:new Array(warehouses.length).fill(0),
+
+                backgroundColor:"#D40511"
+            }]
+        },
+
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+
+            plugins:{
+                tooltip:{
+                    callbacks:{
+                        label:function(context){
+
+                            return "$" +
+                                context.raw.toLocaleString(
+                                    "en-US",
+                                    {
+                                        minimumFractionDigits:2
+                                    }
+                                );
+
+                        }
+                    }
+                }
+            },
+
+            scales:{
+                y:{
+                    beginAtZero:true,
+
+                    ticks:{
+                        callback:function(value){
+
+                            return "$" +
+                                value.toLocaleString();
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+);      
 
     const payChart=new Chart(
     document.getElementById("payChart"),
@@ -3033,6 +3134,87 @@ function updateInsights(
         topCritical || "-";
 
 }
+
+function getMatrixClass(value){
+
+    if(value===0){
+        return "matrix-zero";
+    }
+
+    if(value<=3){
+        return "matrix-low";
+    }
+
+    if(value<=8){
+        return "matrix-mid";
+    }
+
+    return "matrix-high";
+
+}
+
+function renderMatrix(matrixTotals){
+
+    const head =
+        document.getElementById("matrixHead");
+
+    const body =
+        document.getElementById("matrixBody");
+
+    let headHtml = `
+        <tr>
+            <th>Nave</th>
+            ${operationalIncidents.map(i=>`<th>${i}</th>`).join("")}
+        </tr>
+    `;
+
+    let bodyHtml = "";
+
+    warehouses.forEach(w=>{
+
+        const rowTotal =
+            operationalIncidents.reduce((acc,i)=>{
+                return acc + (matrixTotals[w][i] || 0);
+            },0);
+
+        if(rowTotal===0){
+            return;
+        }
+
+        bodyHtml += `
+            <tr>
+                <td>${w}</td>
+
+                ${operationalIncidents.map(i=>{
+
+                    const value =
+                        matrixTotals[w][i] || 0;
+
+                    return `
+                        <td
+                            class="matrix-cell ${getMatrixClass(value)}"
+                            title="${w} / ${i}: ${value}"
+                        >
+                            ${value>0 ? value : "-"}
+                        </td>
+                    `;
+
+                }).join("")}
+            </tr>
+        `;
+
+    });
+
+    head.innerHTML = headHtml;
+    body.innerHTML = bodyHtml || `
+        <tr>
+            <td colspan="${operationalIncidents.length+1}">
+                Sin incidencias operativas en el periodo seleccionado
+            </td>
+        </tr>
+    `;
+
+}
     
 function selectIncident(name){
 
@@ -3058,6 +3240,22 @@ function updateDashboard(data){
     });
 
     const warehouseTotals={};
+
+    const matrixTotals={};
+
+warehouses.forEach(w=>{
+    matrixTotals[w]={};
+
+    operationalIncidents.forEach(i=>{
+        matrixTotals[w][i]=0;
+    });
+});
+
+    const warehouseCosts={};
+
+warehouses.forEach(w=>{
+    warehouseCosts[w]=0;
+});
 
     warehouses.forEach(w=>{
         warehouseTotals[w]=0;
@@ -3097,6 +3295,13 @@ warehouses.forEach(w=>{
     p.incidents[i] || 0;
 
 incidentTotals[i]+=value;
+
+if(
+    operationalIncidents.includes(i) &&
+    matrixTotals[r.warehouse]
+){
+    matrixTotals[r.warehouse][i]+=value;
+}
 
 const calculatedCost =
     value * positionCost;
@@ -3139,6 +3344,20 @@ if(
         });
 
         warehouseTotals[r.warehouse]+=reportTotal;
+
+r.positions.forEach(position=>{
+
+    const qtyTotal =
+        Object.values(position.incidents)
+            .reduce((a,b)=>a+b,0);
+
+    const positionCost =
+        positionCosts[position.position] || 0;
+
+    warehouseCosts[r.warehouse]+=
+        qtyTotal * positionCost;
+
+});        
 
 total+=reportTotal;
 
@@ -3284,24 +3503,16 @@ updateInsights(
     trendTotals,
     warehouseCostTotals
 );
-    lineChart.data.datasets[0].data=
-
-        incidents.map(i=>{
-
-            if(activeIncident && activeIncident!==i){
-                return 0;
-            }
-
-            return incidentTotals[i];
-
-        });
-
-    lineChart.update();
-
+    renderMatrix(matrixTotals);
     barChart.data.datasets[0].data=
         warehouses.map(w=>warehouseTotals[w]);
 
     barChart.update();
+
+    costChart.data.datasets[0].data =
+    warehouses.map(w=>warehouseCosts[w]);
+
+costChart.update();
 
     /* PAY */
 
