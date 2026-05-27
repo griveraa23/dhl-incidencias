@@ -1086,6 +1086,76 @@ header h1{
 
 </div>
 
+<!-- MODAL RESET PASSWORD -->
+
+<div id="resetPasswordModal"
+    style="
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.6);
+        z-index:999999;
+        justify-content:center;
+        align-items:center;
+        padding:20px;
+    "
+>
+    <div
+        style="
+            background:white;
+            width:100%;
+            max-width:420px;
+            border-radius:22px;
+            padding:25px;
+            box-shadow:0 8px 30px rgba(0,0,0,.25);
+        "
+    >
+        <h2 style="color:#D40511;">
+            🔐 Password Temporal
+        </h2>
+
+        <br>
+
+        <p>
+            Entrega esta contraseña temporal al usuario.
+        </p>
+
+        <br>
+
+        <input
+            type="text"
+            id="temporaryPasswordOutput"
+            readonly
+            style="
+                width:100%;
+                padding:14px;
+                border-radius:12px;
+                border:2px solid #FFCC00;
+                font-size:20px;
+                font-weight:bold;
+                text-align:center;
+            "
+        >
+
+        <br><br>
+
+        <button
+            onclick="copyTemporaryPassword()"
+            class="submit-btn"
+        >
+            📋 Copiar Password
+        </button>
+
+        <button
+            onclick="closeResetPasswordModal()"
+            class="remove-btn"
+            style="width:100%; margin-top:10px;"
+        >
+            Cerrar
+        </button>
+    </div>
+</div>    
+
 <script type="module">
 
 import { initializeApp }
@@ -2950,14 +3020,13 @@ async function resetPassword(employeeId){
 
         renderUsersTable();
 
-        alert(
-`
-Password reseteado correctamente
+       document.getElementById(
+    "temporaryPasswordOutput"
+).value=tempPassword;
 
-Nueva contraseña:
-${tempPassword}
-`
-        );
+document.getElementById(
+    "resetPasswordModal"
+).style.display="flex";
 
     }catch(error){
 
@@ -2970,6 +3039,31 @@ ${tempPassword}
 }
 
 window.resetPassword=resetPassword;
+
+function closeResetPasswordModal(){
+
+    document.getElementById(
+        "resetPasswordModal"
+    ).style.display="none";
+
+}
+
+window.closeResetPasswordModal=closeResetPasswordModal;
+
+function copyTemporaryPassword(){
+
+    const password =
+        document.getElementById(
+            "temporaryPasswordOutput"
+        ).value;
+
+    navigator.clipboard.writeText(password);
+
+    alert("Password copiado al portapapeles");
+
+}
+
+window.copyTemporaryPassword=copyTemporaryPassword;    
     
 function renderUsersTable(){
 
