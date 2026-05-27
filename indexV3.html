@@ -413,12 +413,100 @@ header h1{
 
 @media(max-width:900px){
 
+    header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:15px;
+    }
+
+    .header-right{
+        width:100%;
+        flex-direction:column;
+        align-items:stretch;
+        gap:10px;
+    }
+
+    .user-info,
+    .datetime,
+    .logout-btn{
+        width:100%;
+        text-align:center;
+    }
+
+    .container{
+        padding:10px;
+    }
+
+    .top-buttons{
+        flex-direction:column;
+        gap:10px;
+    }
+
+    .top-buttons button{
+        width:100%;
+        font-size:16px;
+        padding:14px;
+    }
+
     .report-layout{
         grid-template-columns:1fr;
     }
 
     .charts-grid{
         grid-template-columns:1fr;
+    }
+
+    .chart-card{
+        min-height:auto;
+        padding:15px;
+    }
+
+    .chart-container{
+        height:260px;
+    }
+
+    .filters{
+        grid-template-columns:1fr;
+        gap:12px;
+    }
+
+    .selector-group{
+        flex-direction:column;
+        gap:10px;
+    }
+
+    .selector{
+        width:100%;
+        text-align:center;
+    }
+
+    .incidents-grid{
+        grid-template-columns:1fr;
+    }
+
+    .position-header{
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    .position-header select,
+    .remove-btn,
+    .add-position-btn{
+        width:100%;
+    }
+
+    .history-table{
+        display:block;
+        overflow-x:auto;
+        white-space:nowrap;
+    }
+
+    .quick-filters{
+        flex-direction:column;
+    }
+
+    .quick-btn{
+        width:100%;
     }
 
 }
@@ -659,7 +747,7 @@ header h1{
 
                     <tr>
 
-                        <th>Fecha</th>
+                        <th>Fecha Programada</th>
                         <th>Usuario</th>
                         <th>Nave</th>
                         <th>Turno</th>
@@ -667,9 +755,9 @@ header h1{
 
                         <th>Tipo</th>
 
-                        <th>Creado</th>
+                        <th>Fecha de Captura</th>
 
-                        <th>Origen</th>
+                        <th>Generado desde</th>
                         
                         <th>Acciones</th>
                         
@@ -707,9 +795,14 @@ header h1{
             </div>
 
             <div>
-                <label>Password</label>
-                <input type="password" id="newPassword">
-            </div>
+    <label>Password</label>
+    <input type="password" id="newPassword">
+</div>
+
+<div>
+    <label>PIN Recuperación</label>
+    <input type="password" id="newRecoveryPin" maxlength="6">
+</div>
 
             <div>
                 <label>Rol</label>
@@ -1642,12 +1735,76 @@ function updateSummary(){
 
 addPositionBlock();
 
+function buildDetailedChanges(oldReport,newReport){
+
+    const changes=[];
+
+    function buildMap(report){
+
+        const map={};
+
+        (report.positions || []).forEach(p=>{
+
+            incidents.forEach(i=>{
+
+                const qty=p.incidents[i] || 0;
+
+                const key=`${p.position}||${i}`;
+
+                if(!map[key]){
+                    map[key]=0;
+                }
+
+                map[key]+=qty;
+
+            });
+
+        });
+
+        return map;
+
+    }
+
+    const oldMap=buildMap(oldReport);
+    const newMap=buildMap(newReport);
+
+    const allKeys=[
+        ...new Set([
+            ...Object.keys(oldMap),
+            ...Object.keys(newMap)
+        ])
+    ];
+
+    allKeys.forEach(key=>{
+
+        const oldValue=oldMap[key] || 0;
+        const newValue=newMap[key] || 0;
+
+        if(oldValue!==newValue){
+
+            const parts=key.split("||");
+
+            changes.push({
+                position:parts[0],
+                incident:parts[1],
+                before:oldValue,
+                after:newValue
+            });
+
+        }
+
+    });
+
+    return changes;
+
+}    
+
 async function submitReport(){
 
     const submitButton =
-    document.querySelector(".submit-btn");
+        document.querySelector(".submit-btn");
 
-submitButton.disabled=true;
+    submitButton.disabled=true;
 
     try{
 
@@ -1659,194 +1816,237 @@ submitButton.disabled=true;
 
         if(username.trim()===""){
             alert("Ingresa usuario");
+            submitButton.disabled=false;
             return;
         }
 
         if(selectedWarehouse===""){
             alert("Selecciona nave");
+            submitButton.disabled=false;
             return;
         }
 
         if(selectedShift===""){
             alert("Selecciona turno");
+            submitButton.disabled=false;
             return;
         }
 
         const invalidPosition =
-    positionsData.some(
-        p=>p.position.trim()===""
-    );
+            positionsData.some(
+                p=>p.position.trim()===""
+            );
 
-if(invalidPosition){
-
-    alert(
-        "Todos los puestos deben seleccionarse"
-    );
-
-    return;
-
-}
+        if(invalidPosition){
+            alert("Todos los puestos deben seleccionarse");
+            submitButton.disabled=false;
+            return;
+        }
 
         const total=
             positionsData.reduce((acc,p)=>{
-
                 return acc +
                     Object.values(p.incidents)
                         .reduce((a,b)=>a+b,0);
-
             },0);
 
         if(total===0){
             alert("Agrega incidencias");
+            submitButton.disabled=false;
             return;
         }
 
+        const duplicatedReport = reports.find(r =>
+            r.scheduledDate === scheduledDate &&
+            r.warehouse === selectedWarehouse &&
+            r.shift === selectedShift &&
+            r.id !== editingReportId
+        );
+
+        if(duplicatedReport){
+
+            alert(
+`
+Ya existe una programación para:
+
+📅 ${scheduledDate}
+🏭 ${selectedWarehouse}
+🔄 ${selectedShift}
+
+Verifica antes de guardar.
+`
+            );
+
+            submitButton.disabled=false;
+            return;
+
+        }
+
         const creationType =
-
-    document.querySelectorAll(
-        ".multiDay:checked"
-    ).length>0
-
-    ? "multi-day"
-
-    : "manual";
+            document.querySelectorAll(".multiDay:checked").length>0
+            ? "multi-day"
+            : "manual";
 
         const creationTimestamp = Date.now();
 
-const reportDataBase={
+        const reportDataBase={
 
-    username,
-    warehouse:selectedWarehouse,
-    shift:selectedShift,
-    positions:positionsData,
-    total,
+            username,
+            warehouse:selectedWarehouse,
+            shift:selectedShift,
+            positions:positionsData,
+            total,
+            creationType,
+            timestamp:creationTimestamp,
+            createdAt:new Date(creationTimestamp).toLocaleString(),
+            createdFromDate:scheduledDate,
+            createdBy:currentUser.employeeId,
+            createdByName:currentUser.name
 
-    creationType,
+        };
 
-    timestamp:creationTimestamp,
+        const originalReport =
+            reports.find(r=>r.id===editingReportId);
 
-    createdAt:
-        new Date(creationTimestamp)
-            .toLocaleString(),
+       let changeSummary = [];
 
-    createdFromDate:
-        scheduledDate,
+if(originalReport){
 
-    createdBy:
-        currentUser.employeeId
-
-};
-
-/* EDITAR */
-
-if(editingReportId!==null){
-
-    await setDoc(
-
-        doc(
-            db,
-            "reports",
-            editingReportId
-        ),
-
-        {
-            ...reportDataBase,
-            scheduledDate
-        }
-
-    );
-
-}else{
-
-    /* CREAR MULTIPLES DIAS */
-
-
-    const checkedDays = [
-
-        ...document.querySelectorAll(
-            ".multiDay:checked"
-        )
-
-    ].map(cb=>parseInt(cb.value));
-
-/* SI NO SELECCIONA DÍAS
-   SOLO GUARDA LA FECHA NORMAL */
-
-if(checkedDays.length===0){
-
-    await addDoc(
-        collection(db,"reports"),
-        {
-            ...reportDataBase,
-            scheduledDate
-        }
-    );
-
-}else{
-
-    const baseDate =
-        new Date(
-            scheduledDate + "T00:00:00"
-        );
-
-    /* OBTENER DOMINGO */
-
-    const sunday =
-        new Date(baseDate);
-
-    sunday.setDate(
-        baseDate.getDate() -
-        baseDate.getDay()
-    );
-
-    for(const day of checkedDays){
-
-        const newDate =
-            new Date(sunday);
-
-        newDate.setDate(
-            sunday.getDate() + day
-        );
-
-        const formattedDate =
-            formatDate(newDate);
-
-        await addDoc(
-            collection(db,"reports"),
+    changeSummary =
+        buildDetailedChanges(
+            originalReport,
             {
                 ...reportDataBase,
-                scheduledDate: formattedDate
+                scheduledDate
             }
         );
 
-    }
-
 }
 
-}
+        if(editingReportId!==null){
+
+            const previousAudit =
+                originalReport?.auditLog || [];
+
+            const auditItem = {
+    action:"updated",
+    userId:currentUser.employeeId,
+    userName:currentUser.name,
+    date:new Date().toLocaleString(),
+    changes:
+        changeSummary.length>0
+        ? changeSummary
+        : "Edición sin cambios en puestos/incidencias"
+};
+
+            await setDoc(
+                doc(db,"reports",editingReportId),
+                {
+                    ...reportDataBase,
+                    scheduledDate,
+                    createdAt:originalReport?.createdAt || reportDataBase.createdAt,
+                    createdBy:originalReport?.createdBy || reportDataBase.createdBy,
+                    createdByName:originalReport?.createdByName || reportDataBase.createdByName,
+                    createdFromDate:originalReport?.createdFromDate || reportDataBase.createdFromDate,
+                    updatedAt:new Date().toLocaleString(),
+                    updatedBy:currentUser.employeeId,
+                    updatedByName:currentUser.name,
+                    lastChange:auditItem.changes,
+                    auditLog:[
+                        ...previousAudit,
+                        auditItem
+                    ]
+                }
+            );
+
+        }else{
+
+            const checkedDays = [
+                ...document.querySelectorAll(".multiDay:checked")
+            ].map(cb=>parseInt(cb.value));
+
+            if(checkedDays.length===0){
+
+                await addDoc(
+                    collection(db,"reports"),
+                    {
+                        ...reportDataBase,
+                        scheduledDate,
+                        auditLog:[
+                            {
+                                action:"created",
+                                userId:currentUser.employeeId,
+                                userName:currentUser.name,
+                                date:new Date().toLocaleString(),
+                                changes:"Programación creada manualmente"
+                            }
+                        ]
+                    }
+                );
+
+            }else{
+
+                const baseDate =
+                    new Date(scheduledDate + "T00:00:00");
+
+                const sunday =
+                    new Date(baseDate);
+
+                sunday.setDate(
+                    baseDate.getDate() -
+                    baseDate.getDay()
+                );
+
+                for(const day of checkedDays){
+
+                    const newDate =
+                        new Date(sunday);
+
+                    newDate.setDate(
+                        sunday.getDate() + day
+                    );
+
+                    const formattedDate =
+                        formatDate(newDate);
+
+                    await addDoc(
+                        collection(db,"reports"),
+                        {
+                            ...reportDataBase,
+                            scheduledDate:formattedDate,
+                            auditLog:[
+                                {
+                                    action:"created",
+                                    userId:currentUser.employeeId,
+                                    userName:currentUser.name,
+                                    date:new Date().toLocaleString(),
+                                    changes:"Programación creada por multi-día"
+                                }
+                            ]
+                        }
+                    );
+
+                }
+
+            }
+
+        }
 
         resetForm();
-
         showToast();
-
         submitButton.disabled=false;
 
     }catch(error){
 
         submitButton.disabled=false;
-
         console.error(error);
-
-        alert(
-            "Error al guardar programación"
-        );
+        alert("Error al guardar programación");
 
     }
-    
+
 }
 
 window.submitReport=submitReport;
-
 function resetForm(){
 
     editingReportId=null;
@@ -2390,7 +2590,23 @@ trendTotals[r.scheduledDate]+=reportTotal;
 </td>
 
 <td>
-    ${r.generatedFrom || r.createdFromDate || "-"}
+
+${
+    r.creationType==="manual"
+
+    ? "-"
+
+    : r.creationType==="multi-day"
+
+    ? (r.createdFromDate || "-")
+
+    : r.creationType==="duplicated"
+
+    ? (r.generatedFrom || "-")
+
+    : "-"
+}
+
 </td>
 
 <td>
@@ -2516,13 +2732,20 @@ async function createUser(){
         const role =
             document.getElementById("newUserRole").value;
 
+        const recoveryPin =
+    document.getElementById("newRecoveryPin").value;
+
         const hashedPassword =
             await hashPassword(password);
 
+        const hashedRecoveryPin =
+    await hashPassword(recoveryPin);
+
         if(
             name.trim()==="" ||
-            employeeId.trim()==="" ||
-            password.trim()===""
+employeeId.trim()==="" ||
+password.trim()==="" ||
+recoveryPin.trim()===""
         ){
             alert("Completa todos los campos");
             return;
@@ -2545,10 +2768,13 @@ if(existingUser){
             {
                 employeeId,
                 password:hashedPassword,
-                name,
-                role,
-                active:true,
-                warehouses:[]
+recoveryPin:hashedRecoveryPin,
+mustChangePassword:false,
+resetHistory:[],
+name,
+role,
+active:true,
+warehouses:[]
             }
         );
 
@@ -2557,6 +2783,7 @@ if(existingUser){
         document.getElementById("newUserName").value="";
         document.getElementById("newEmployeeId").value="";
         document.getElementById("newPassword").value="";
+        document.getElementById("newRecoveryPin").value="";
 
         await loadUsers();
 
@@ -3092,13 +3319,18 @@ function viewReport(reportId){
     let html = `
 
         <div class="summary-item">
-            <strong>Fecha</strong>
+            <strong>Fecha programada</strong>
             <span>${report.scheduledDate}</span>
         </div>
 
         <div class="summary-item">
-            <strong>Usuario</strong>
-            <span>${report.username}</span>
+            <strong>Capturó</strong>
+            <span>${report.createdByName || report.username || "-"}</span>
+        </div>
+
+        <div class="summary-item">
+            <strong>Fecha de captura</strong>
+            <span>${report.createdAt || "-"}</span>
         </div>
 
         <div class="summary-item">
@@ -3110,6 +3342,23 @@ function viewReport(reportId){
             <strong>Turno</strong>
             <span>${report.shift}</span>
         </div>
+
+        <div class="summary-item">
+            <strong>Tipo</strong>
+            <span>
+                ${
+                    report.creationType==="multi-day"
+                    ? "📋 Multi-día"
+                    : report.creationType==="duplicated"
+                    ? "🔁 Duplicado"
+                    : "✍ Manual"
+                }
+            </span>
+        </div>
+
+        <br>
+
+        <h3>📦 Detalle programado</h3>
 
         <br>
 
@@ -3131,7 +3380,6 @@ function viewReport(reportId){
             if(qty>0){
 
                 subtotal += qty;
-
                 grandTotal += qty;
 
                 incidentsHtml += `
@@ -3187,12 +3435,109 @@ function viewReport(reportId){
                 text-align:center;
                 font-size:22px;
                 font-weight:bold;
+                margin-bottom:25px;
             "
         >
             Total Programado: ${grandTotal}
         </div>
 
+        <h3>🕓 Historial / Auditoría</h3>
+
+        <br>
+
     `;
+
+    const auditLog =
+        report.auditLog || [];
+
+    if(auditLog.length===0){
+
+        html += `
+
+            <div
+                style="
+                    background:#fafafa;
+                    border:1px solid #eee;
+                    border-radius:15px;
+                    padding:15px;
+                "
+            >
+                Sin historial de cambios disponible.
+            </div>
+
+        `;
+
+    }else{
+
+        auditLog.forEach(item=>{
+
+            html += `
+
+                <div
+                    style="
+                        border:1px solid #eee;
+                        border-radius:15px;
+                        padding:15px;
+                        margin-bottom:12px;
+                        background:#fafafa;
+                    "
+                >
+
+                    <div class="summary-item">
+                        <strong>Acción</strong>
+                        <span>
+                            ${
+                                item.action==="created"
+                                ? "Creación"
+                                : item.action==="updated"
+                                ? "Edición"
+                                : item.action
+                            }
+                        </span>
+                    </div>
+
+                    <div class="summary-item">
+                        <strong>Usuario</strong>
+                        <span>${item.userName || item.userId || "-"}</span>
+                    </div>
+
+                    <div class="summary-item">
+                        <strong>Fecha</strong>
+                        <span>${item.date || "-"}</span>
+                    </div>
+
+                    <div>
+    <strong>Cambios</strong>
+
+    <br><br>
+
+    ${
+        Array.isArray(item.changes)
+
+        ? item.changes.map(change=>`
+
+            <div class="summary-item">
+                <span>
+                    ${change.position} / ${change.incident}
+                </span>
+                <strong>
+                    ${change.before} → ${change.after}
+                </strong>
+            </div>
+
+        `).join("")
+
+        : `<span>${item.changes || "-"}</span>`
+    }
+</div>
+
+                </div>
+
+            `;
+
+        });
+
+    }
 
     document.getElementById("detailContent").innerHTML =
         html;
@@ -3203,7 +3548,6 @@ function viewReport(reportId){
 }
 
 window.viewReport=viewReport;
-
 function closeDetailModal(){
 
     document.getElementById("detailModal").style.display =
