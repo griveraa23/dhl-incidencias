@@ -385,6 +385,38 @@ header h1{
     margin-bottom:20px;
 }
 
+.insights-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+}
+
+.insight-box{
+    background:#fafafa;
+    border-radius:18px;
+    padding:20px;
+    border-left:8px solid #D40511;
+}
+
+.insight-box.wide{
+    grid-column:1/-1;
+}
+
+.insight-title{
+    font-size:14px;
+    color:#666;
+    margin-bottom:10px;
+    font-weight:bold;
+}
+
+.insight-value{
+    font-size:24px;
+    font-weight:bold;
+    color:#D40511;
+    line-height:1.4;
+}
+    
 .chart-card{
     background:white;
     padding:20px;
@@ -707,6 +739,85 @@ header h1{
         </div>
 
         <div class="kpis" id="dynamicKpis"></div>
+
+        <div class="card" id="insightsCard">
+
+    <h2>
+        🧠 Insights Operativos
+    </h2>
+
+    <br>
+
+    <div class="insights-grid">
+
+        <div class="insight-box">
+            <div class="insight-title">
+                🚨 Nave con más ausentismo
+            </div>
+
+            <div
+                class="insight-value"
+                id="topAbsenceWarehouse"
+            >
+                -
+            </div>
+        </div>
+
+        <div class="insight-box">
+            <div class="insight-title">
+                📌 Incidencia más recurrente
+            </div>
+
+            <div
+                class="insight-value"
+                id="topIncident"
+            >
+                -
+            </div>
+        </div>
+
+        <div class="insight-box">
+            <div class="insight-title">
+                📅 Día con mayor carga
+            </div>
+
+            <div
+                class="insight-value"
+                id="topDay"
+            >
+                -
+            </div>
+        </div>
+
+        <div class="insight-box">
+            <div class="insight-title">
+                💰 Nave más costosa
+            </div>
+
+            <div
+                class="insight-value"
+                id="topCostWarehouse"
+            >
+                -
+            </div>
+        </div>
+
+        <div class="insight-box wide">
+            <div class="insight-title">
+                🔥 Top incidencias críticas
+            </div>
+
+            <div
+                class="insight-value"
+                id="topCriticalIncidents"
+            >
+                -
+            </div>
+        </div>
+
+    </div>
+
+</div>
 
         <div class="charts-grid">
 
@@ -1396,6 +1507,15 @@ const positions = [
 "Coordinador"
 ];
 
+ const positionCosts = {
+    "Operario Flexible":500,
+    "Tractorista":650,
+    "Montacarguista":700,
+    "Gruista":800,
+    "Analista":900,
+    "Coordinador":1200
+};
+
 const incidents = [
 "Vacante",
 "Capacitación",
@@ -1414,6 +1534,10 @@ const incidents = [
 "Talleres / Cursos",
 "Sindicato"
 ];
+
+const operationalIncidents = incidents.filter(i=>
+    i!=="Producción"
+);
 
 let selectedWarehouse="";
 let selectedShift="";
@@ -2693,6 +2817,18 @@ function setQuickFilter(type){
 }
 window.setQuickFilter=setQuickFilter;
 
+function formatCurrency(value){
+
+    return value.toLocaleString(
+        "es-MX",
+        {
+            style:"currency",
+            currency:"MXN"
+        }
+    );
+
+}    
+
 function formatDate(date){
 
     const year=date.getFullYear();
@@ -2772,18 +2908,22 @@ if(endDate){
 
 }
 
-function renderDynamicKpis(total,incidentTotals){
+function renderDynamicKpis(
+    total,
+    incidentTotals,
+    costTotal,
+    topIncidentName,
+    topCostWarehouseName
+){
 
-    const container=
+    const container =
         document.getElementById("dynamicKpis");
 
     container.innerHTML="";
 
     container.innerHTML += `
 
-        <div class="kpi
-            ${activeIncident===null?"active":""}"
-
+        <div class="kpi active"
             onclick="selectIncident(null)">
 
             <h3>Total Programado</h3>
@@ -2794,37 +2934,106 @@ function renderDynamicKpis(total,incidentTotals){
 
         </div>
 
+        <div class="kpi">
+
+            <h3>Costo Total</h3>
+
+            <div class="kpi-number">
+                ${formatCurrency(costTotal)}
+            </div>
+
+        </div>
+
+        <div class="kpi"
+            onclick="selectIncident('${topIncidentName || ""}')">
+
+            <h3>Incidencia más recurrente</h3>
+
+            <div class="kpi-number"
+                style="font-size:24px;">
+                ${topIncidentName || "-"}
+            </div>
+
+        </div>
+
+        <div class="kpi">
+
+            <h3>Nave más costosa</h3>
+
+            <div class="kpi-number"
+                style="font-size:24px;">
+                ${topCostWarehouseName || "-"}
+            </div>
+
+        </div>
+
     `;
-
-    Object.entries(incidentTotals)
-
-        .filter(([k,v])=>v>0)
-
-        .sort((a,b)=>b[1]-a[1])
-
-        .forEach(item=>{
-
-            container.innerHTML += `
-
-                <div class="kpi
-                    ${activeIncident===item[0]?"active":""}"
-
-                    onclick="selectIncident('${item[0]}')">
-
-                    <h3>${item[0]}</h3>
-
-                    <div class="kpi-number">
-                        ${item[1]}
-                    </div>
-
-                </div>
-
-            `;
-
-        });
 
 }
 
+function updateInsights(
+    absenceByWarehouse,
+    incidentTotals,
+    trendTotals,
+    warehouseCostTotals
+){
+
+    const topAbsence =
+        Object.entries(absenceByWarehouse)
+            .sort((a,b)=>b[1]-a[1])[0];
+
+    const topIncident =
+        Object.entries(incidentTotals)
+            .filter(([name,value])=>
+                operationalIncidents.includes(name) &&
+                value>0
+            )
+            .sort((a,b)=>b[1]-a[1])[0];
+
+    const topDay =
+        Object.entries(trendTotals)
+            .sort((a,b)=>b[1]-a[1])[0];
+
+    const topCostWarehouse =
+        Object.entries(warehouseCostTotals)
+            .sort((a,b)=>b[1]-a[1])[0];
+
+    const topCritical =
+        Object.entries(incidentTotals)
+            .filter(([name,value])=>
+                operationalIncidents.includes(name) &&
+                value>0
+            )
+            .sort((a,b)=>b[1]-a[1])
+            .slice(0,3)
+            .map(([name,value])=>`${name}: ${value}`)
+            .join("<br>");
+
+    document.getElementById("topAbsenceWarehouse").innerHTML =
+        topAbsence && topAbsence[1]>0
+            ? `${topAbsence[0]}: ${topAbsence[1]}`
+            : "-";
+
+    document.getElementById("topIncident").innerHTML =
+        topIncident
+            ? `${topIncident[0]}: ${topIncident[1]}`
+            : "-";
+
+    document.getElementById("topDay").innerHTML =
+        topDay
+            ? `${topDay[0]}: ${topDay[1]}`
+            : "-";
+
+    document.getElementById("topCostWarehouse").innerHTML =
+        topCostWarehouse && topCostWarehouse[1]>0
+            ? `${topCostWarehouse[0]}<br>${formatCurrency(topCostWarehouse[1])}`
+            : "-";
+
+    document.getElementById("topCriticalIncidents").innerHTML =
+        topCritical || "-";
+
+}
+    
 function selectIncident(name){
 
     activeIncident=name;
@@ -2857,7 +3066,16 @@ function updateDashboard(data){
     let paidTotal=0;
 let unpaidTotal=0;
 
+let costTotal=0;
+
 const trendTotals={};
+const absenceByWarehouse={};
+const warehouseCostTotals={};
+
+warehouses.forEach(w=>{
+    absenceByWarehouse[w]=0;
+    warehouseCostTotals[w]=0;
+});
 
     const history=
         document.getElementById("historyTable");
@@ -2870,12 +3088,26 @@ const trendTotals={};
 
         r.positions.forEach(p=>{
 
-            incidents.forEach(i=>{
+    const positionCost =
+        positionCosts[p.position] || 0;
+
+    incidents.forEach(i=>{
 
                 const value=
     p.incidents[i] || 0;
 
 incidentTotals[i]+=value;
+
+const calculatedCost =
+    value * positionCost;
+
+costTotal += calculatedCost;
+
+warehouseCostTotals[r.warehouse] += calculatedCost;
+
+if(i==="Ausentismo"){
+    absenceByWarehouse[r.warehouse] += value;
+}        
 
 /* PAGADOS */
 
@@ -3024,11 +3256,34 @@ ${
 
     });
 
-    renderDynamicKpis(
-        total,
-        incidentTotals
-    );
+    const topIncidentEntry =
+    Object.entries(incidentTotals)
+        .filter(([name,value])=>
+            operationalIncidents.includes(name) &&
+            value>0
+        )
+        .sort((a,b)=>b[1]-a[1])[0];
 
+const topCostWarehouseEntry =
+    Object.entries(warehouseCostTotals)
+        .sort((a,b)=>b[1]-a[1])[0];
+
+renderDynamicKpis(
+    total,
+    incidentTotals,
+    costTotal,
+    topIncidentEntry ? topIncidentEntry[0] : "-",
+    topCostWarehouseEntry && topCostWarehouseEntry[1]>0
+        ? topCostWarehouseEntry[0]
+        : "-"
+);
+
+updateInsights(
+    absenceByWarehouse,
+    incidentTotals,
+    trendTotals,
+    warehouseCostTotals
+);
     lineChart.data.datasets[0].data=
 
         incidents.map(i=>{
@@ -3500,7 +3755,10 @@ function exportToExcel(){
 
         r.positions.forEach(p=>{
 
-            incidents.forEach(i=>{
+    const positionCost =
+        positionCosts[p.position] || 0;
+
+    incidents.forEach(i=>{
 
                 const qty=
                     p.incidents[i] || 0;
