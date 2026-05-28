@@ -846,7 +846,7 @@ header h1{
 
         <div class="insight-box">
             <div class="insight-title">
-                📅 Día con mayor carga
+                📅 Día con mayor incidencias
             </div>
 
             <div
@@ -859,7 +859,7 @@ header h1{
 
         <div class="insight-box">
             <div class="insight-title">
-                💰 Nave más costosa
+                🏭 Nave con más incidencias
             </div>
 
             <div
@@ -919,7 +919,7 @@ header h1{
 
 <div class="chart-card">
 
-    <h2>💵 Costo por Nave</h2>
+    <h2>💵 Costo de Incidencias por Nave</h2>
 
     <br>
 
@@ -2683,7 +2683,7 @@ const costChart=new Chart(
             labels:warehouses,
 
             datasets:[{
-                label:"Costo",
+                label:"Costo de incidencias",
 
                 data:new Array(warehouses.length).fill(0),
 
@@ -3037,7 +3037,7 @@ function renderDynamicKpis(
 
         <div class="kpi">
 
-            <h3>Costo Total</h3>
+            <h3>Costo Total de Incidencias</h3>
 
             <div class="kpi-number">
                 ${formatCurrency(costTotal)}
@@ -3059,7 +3059,7 @@ function renderDynamicKpis(
 
         <div class="kpi">
 
-            <h3>Nave más costosa</h3>
+            <h3>Nave con más incidencias</h3>
 
             <div class="kpi-number"
                 style="font-size:24px;">
@@ -3076,7 +3076,8 @@ function updateInsights(
     absenceByWarehouse,
     incidentTotals,
     trendTotals,
-    warehouseCostTotals
+    warehouseCostTotals,
+    warehouseIncidentTotals
 ){
 
     const topAbsence =
@@ -3095,9 +3096,9 @@ function updateInsights(
         Object.entries(trendTotals)
             .sort((a,b)=>b[1]-a[1])[0];
 
-    const topCostWarehouse =
-        Object.entries(warehouseCostTotals)
-            .sort((a,b)=>b[1]-a[1])[0];
+    const topIncidentWarehouse =
+    Object.entries(warehouseIncidentTotals)
+        .sort((a,b)=>b[1]-a[1])[0];
 
     const topCritical =
         Object.entries(incidentTotals)
@@ -3126,10 +3127,9 @@ function updateInsights(
             : "-";
 
     document.getElementById("topCostWarehouse").innerHTML =
-        topCostWarehouse && topCostWarehouse[1]>0
-            ? `${topCostWarehouse[0]}<br>${formatCurrency(topCostWarehouse[1])}`
-            : "-";
-
+    topIncidentWarehouse && topIncidentWarehouse[1]>0
+        ? `${topIncidentWarehouse[0]}: ${topIncidentWarehouse[1]}`
+        : "-";
     document.getElementById("topCriticalIncidents").innerHTML =
         topCritical || "-";
 
@@ -3284,6 +3284,8 @@ warehouses.forEach(w=>{
 
         let reportTotal=0;
 
+        let reportIncidentTotal=0;
+
         r.positions.forEach(p=>{
 
     const positionCost =
@@ -3294,6 +3296,10 @@ warehouses.forEach(w=>{
                 const value=
     p.incidents[i] || 0;
 
+        if(operationalIncidents.includes(i)){
+    reportIncidentTotal+=value;
+}
+
 incidentTotals[i]+=value;
 
 if(
@@ -3303,12 +3309,16 @@ if(
     matrixTotals[r.warehouse][i]+=value;
 }
 
-const calculatedCost =
-    value * positionCost;
+if(operationalIncidents.includes(i)){
 
-costTotal += calculatedCost;
+    const calculatedCost =
+        value * positionCost;
 
-warehouseCostTotals[r.warehouse] += calculatedCost;
+    costTotal += calculatedCost;
+
+    warehouseCostTotals[r.warehouse] += calculatedCost;
+
+}
 
 if(i==="Ausentismo"){
     absenceByWarehouse[r.warehouse] += value;
@@ -3343,22 +3353,24 @@ if(
 
         });
 
-        warehouseTotals[r.warehouse]+=reportTotal;
+        warehouseTotals[r.warehouse]+=reportIncidentTotal;
 
 r.positions.forEach(position=>{
-
-    const qtyTotal =
-        Object.values(position.incidents)
-            .reduce((a,b)=>a+b,0);
 
     const positionCost =
         positionCosts[position.position] || 0;
 
-    warehouseCosts[r.warehouse]+=
-        qtyTotal * positionCost;
+    operationalIncidents.forEach(incident=>{
 
-});        
+        const qty =
+            position.incidents[incident] || 0;
 
+        warehouseCosts[r.warehouse]+=
+            qty * positionCost;
+
+    });
+
+});
 total+=reportTotal;
 
 /* TENDENCIA */
@@ -3367,7 +3379,7 @@ if(!trendTotals[r.scheduledDate]){
     trendTotals[r.scheduledDate]=0;
 }
 
-trendTotals[r.scheduledDate]+=reportTotal;
+trendTotals[r.scheduledDate]+=reportIncidentTotal;
 
         history.innerHTML += `
 
@@ -3483,8 +3495,29 @@ ${
         )
         .sort((a,b)=>b[1]-a[1])[0];
 
-const topCostWarehouseEntry =
-    Object.entries(warehouseCostTotals)
+const warehouseIncidentTotals = {};
+
+warehouses.forEach(w=>{
+    warehouseIncidentTotals[w]=0;
+});
+
+filtered.forEach(r=>{
+
+    (r.positions || []).forEach(p=>{
+
+        operationalIncidents.forEach(i=>{
+
+            warehouseIncidentTotals[r.warehouse] +=
+                p.incidents[i] || 0;
+
+        });
+
+    });
+
+});
+
+const topIncidentWarehouseEntry =
+    Object.entries(warehouseIncidentTotals)
         .sort((a,b)=>b[1]-a[1])[0];
 
 renderDynamicKpis(
@@ -3492,17 +3525,19 @@ renderDynamicKpis(
     incidentTotals,
     costTotal,
     topIncidentEntry ? topIncidentEntry[0] : "-",
-    topCostWarehouseEntry && topCostWarehouseEntry[1]>0
-        ? topCostWarehouseEntry[0]
-        : "-"
+    topIncidentWarehouseEntry && topIncidentWarehouseEntry[1]>0
+    ? topIncidentWarehouseEntry[0]
+    : "-"
 );
 
 updateInsights(
     absenceByWarehouse,
     incidentTotals,
     trendTotals,
-    warehouseCostTotals
+    warehouseCostTotals,
+    warehouseIncidentTotals
 );
+    
     renderMatrix(matrixTotals);
     barChart.data.datasets[0].data=
         warehouses.map(w=>warehouseTotals[w]);
