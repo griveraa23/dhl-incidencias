@@ -415,6 +415,7 @@ header h1{
 }
     
 .chart-card{
+    overflow:hidden;
     background:white;
     padding:20px;
     border-radius:20px;
@@ -504,6 +505,19 @@ header h1{
     border-collapse:collapse;
 }
 
+    /* RESPONSIVE MATRIZ */
+
+.matrix-wrapper{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    border-radius:20px;
+}
+
+.matrix-table{
+    min-width:900px;
+}
+
 .history-table th,
 .history-table td{
     padding:12px;
@@ -524,41 +538,6 @@ header h1{
 
 @media(max-width:900px){
 
-    header{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:15px;
-    }
-
-    .header-right{
-        width:100%;
-        flex-direction:column;
-        align-items:stretch;
-        gap:10px;
-    }
-
-    .user-info,
-    .datetime,
-    .logout-btn{
-        width:100%;
-        text-align:center;
-    }
-
-    .container{
-        padding:10px;
-    }
-
-    .top-buttons{
-        flex-direction:column;
-        gap:10px;
-    }
-
-    .top-buttons button{
-        width:100%;
-        font-size:16px;
-        padding:14px;
-    }
-
     .report-layout{
         grid-template-columns:1fr;
     }
@@ -568,59 +547,37 @@ header h1{
     }
 
     .chart-card{
-        min-height:auto;
+        min-height:320px;
         padding:15px;
     }
 
     .chart-container{
-        height:260px;
+        height:240px;
     }
 
-    .filters{
-        grid-template-columns:1fr;
-        gap:12px;
+    .kpi{
+        padding:15px;
     }
 
-    .selector-group{
-        flex-direction:column;
-        gap:10px;
+    .kpi-number{
+        font-size:28px;
     }
 
-    .selector{
-        width:100%;
-        text-align:center;
+    header h1{
+        font-size:24px;
     }
 
-    .incidents-grid{
-        grid-template-columns:1fr;
+    .top-buttons button{
+        font-size:16px;
+        padding:12px;
     }
 
-    .position-header{
-        flex-direction:column;
-        align-items:stretch;
-    }
-
-    .position-header select,
-    .remove-btn,
-    .add-position-btn{
-        width:100%;
-    }
-
-    .history-table{
-        display:block;
-        overflow-x:auto;
-        white-space:nowrap;
-    }
-
-    .quick-filters{
-        flex-direction:column;
-    }
-
-    .quick-btn{
-        width:100%;
+    .insight-card{
+        min-height:auto;
     }
 
 }
+
 </style>
 
 </head>
@@ -896,11 +853,15 @@ header h1{
     <br>
 
     <div class="matrix-container">
+    <div class="matrix-wrapper">
+
         <table class="matrix-table">
             <thead id="matrixHead"></thead>
             <tbody id="matrixBody"></tbody>
         </table>
-    </div>
+
+    </div>    
+</div>
 
 </div>
     <div class="chart-card">
