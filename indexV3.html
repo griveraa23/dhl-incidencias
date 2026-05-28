@@ -505,6 +505,19 @@ header h1{
     border-collapse:collapse;
 }
 
+    /* RESPONSIVE TABLAS */
+
+.table-wrapper{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    border-radius:16px;
+}
+
+.history-table{
+    min-width:900px;
+}
+
     /* RESPONSIVE MATRIZ */
 
 .matrix-wrapper{
@@ -922,10 +935,11 @@ header h1{
 
             <br>
 
-            <table class="history-table">
+            <div class="table-wrapper">
 
-                <thead>
+    <table class="history-table">
 
+        <thead>
                     <tr>
 
                         <th>Fecha Programada</th>
@@ -946,14 +960,17 @@ header h1{
 
                 </thead>
 
-                <tbody id="historyTable"></tbody>
+                <tbody id="historyTable">
+                    
+                </tbody>
 
             </table>
+
+</div>
 
         </div>
 
     </div>
-<!-- USUARIOS -->
 
 <div id="usersPage" class="page">
 
