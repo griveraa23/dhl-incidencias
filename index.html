@@ -385,6 +385,35 @@ header h1{
     margin-bottom:20px;
 }
 
+.insights-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+}
+
+.insight-box{
+    background:#fafafa;
+    border-radius:18px;
+    padding:20px;
+    border-left:8px solid #D40511;
+}
+
+
+.insight-title{
+    font-size:14px;
+    color:#666;
+    margin-bottom:10px;
+    font-weight:bold;
+}
+
+.insight-value{
+    font-size:24px;
+    font-weight:bold;
+    color:#D40511;
+    line-height:1.4;
+}
+    
 .chart-card{
     background:white;
     padding:20px;
@@ -397,6 +426,77 @@ header h1{
     position:relative;
     height:320px;
     width:100%;
+}
+
+.matrix-card{
+    grid-column:1/-1;
+}
+
+.matrix-container{
+    width:100%;
+    overflow:auto;
+    max-height:420px;
+}
+
+.matrix-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1100px;
+}
+
+.matrix-table th,
+.matrix-table td{
+    padding:10px;
+    border:1px solid #eee;
+    text-align:center;
+    font-size:13px;
+}
+
+.matrix-table th{
+    background:#D40511;
+    color:white;
+    position:sticky;
+    top:0;
+    z-index:2;
+}
+
+.matrix-table td:first-child,
+.matrix-table th:first-child{
+    position:sticky;
+    left:0;
+    background:white;
+    color:#333;
+    font-weight:bold;
+    z-index:3;
+}
+
+.matrix-table th:first-child{
+    background:#FFCC00;
+    color:#D40511;
+}
+
+.matrix-cell{
+    font-weight:bold;
+    border-radius:8px;
+}
+
+.matrix-zero{
+    color:#bbb;
+}
+
+.matrix-low{
+    background:#fff4cc;
+    color:#7a5b00;
+}
+
+.matrix-mid{
+    background:#ffd6d6;
+    color:#9b0000;
+}
+
+.matrix-high{
+    background:#D40511;
+    color:white;
 }    
     
 .history-table{
@@ -708,22 +808,101 @@ header h1{
 
         <div class="kpis" id="dynamicKpis"></div>
 
-        <div class="charts-grid">
+        <div class="card" id="insightsCard">
 
-    <div class="chart-card">
+    <h2>
+        🧠 Insights Operativos
+    </h2>
 
-        <h2>📈 Incidencias</h2>
+    <br>
 
-        <br>
+    <div class="insights-grid">
 
-        <div class="chart-container">
-           <div style="height:350px;">
-    <canvas id="lineChart"></canvas>
-</div>
+        <div class="insight-box">
+            <div class="insight-title">
+                🚨 Nave con más ausentismo
+            </div>
+
+            <div
+                class="insight-value"
+                id="topAbsenceWarehouse"
+            >
+                -
+            </div>
+        </div>
+
+        <div class="insight-box">
+            <div class="insight-title">
+                📌 Incidencia más recurrente
+            </div>
+
+            <div
+                class="insight-value"
+                id="topIncident"
+            >
+                -
+            </div>
+        </div>
+
+        <div class="insight-box">
+            <div class="insight-title">
+                📅 Día con mayor incidencias
+            </div>
+
+            <div
+                class="insight-value"
+                id="topDay"
+            >
+                -
+            </div>
+        </div>
+
+        <div class="insight-box">
+            <div class="insight-title">
+                🏭 Nave con más incidencias
+            </div>
+
+            <div
+                class="insight-value"
+                id="topCostWarehouse"
+            >
+                -
+            </div>
+        </div>
+
+        <div class="insight-box">
+            <div class="insight-title">
+                🔥 Top incidencias críticas
+            </div>
+
+            <div
+                class="insight-value"
+                id="topCriticalIncidents"
+            >
+                -
+            </div>
         </div>
 
     </div>
 
+</div>
+
+        <div class="charts-grid">
+
+    <div class="chart-card matrix-card">
+
+    <h2>🧩 Matriz Operativa Nave vs Incidencia</h2>
+
+    <br>
+
+    <div class="matrix-container">
+        <table class="matrix-table">
+            <thead id="matrixHead"></thead>
+            <tbody id="matrixBody"></tbody>
+        </table>
+    </div>
+
+</div>
     <div class="chart-card">
 
         <h2>🏭 Incidencias por Nave</h2>
@@ -737,6 +916,18 @@ header h1{
         </div>
 
     </div>
+
+<div class="chart-card">
+
+    <h2>💵 Costo de Incidencias por Nave</h2>
+
+    <br>
+
+    <div class="chart-container">
+        <canvas id="costChart"></canvas>
+    </div>
+
+</div>            
 
     <div class="chart-card">
 
@@ -1396,6 +1587,15 @@ const positions = [
 "Coordinador"
 ];
 
+ const positionCosts = {
+    "Operario Flexible":500,
+    "Tractorista":650,
+    "Montacarguista":700,
+    "Gruista":800,
+    "Analista":900,
+    "Coordinador":1200
+};
+
 const incidents = [
 "Vacante",
 "Capacitación",
@@ -1414,6 +1614,10 @@ const incidents = [
 "Talleres / Cursos",
 "Sindicato"
 ];
+
+const operationalIncidents = incidents.filter(i=>
+    i!=="Producción"
+);
 
 let selectedWarehouse="";
 let selectedShift="";
@@ -2454,42 +2658,6 @@ function showToast(){
 
 }
 
-const lineChart=new Chart(
-    document.getElementById("lineChart"),
-    {
-        type:"line",
-
-        data:{
-            labels:incidents,
-
-            datasets:[{
-                label:"Incidencias",
-                data:new Array(incidents.length).fill(0),
-                borderColor:"#D40511",
-                backgroundColor:"rgba(212,5,17,0.2)",
-                fill:true,
-                tension:0.4,
-                pointRadius:5,
-                pointHoverRadius:7
-            }]
-        },
-
-        options:{
-            responsive:true,
-            maintainAspectRatio:false,
-
-            scales:{
-                y:{
-                    beginAtZero:true,
-                    ticks:{
-                        precision:0,
-                        stepSize:1
-                    }
-                }
-            }
-        }
-    }
-);
 
 const barChart=new Chart(
     document.getElementById("barChart"),
@@ -2505,6 +2673,63 @@ const barChart=new Chart(
         }
     }
 );
+
+const costChart=new Chart(
+    document.getElementById("costChart"),
+    {
+        type:"bar",
+
+        data:{
+            labels:warehouses,
+
+            datasets:[{
+                label:"Costo de incidencias",
+
+                data:new Array(warehouses.length).fill(0),
+
+                backgroundColor:"#D40511"
+            }]
+        },
+
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+
+            plugins:{
+                tooltip:{
+                    callbacks:{
+                        label:function(context){
+
+                            return "$" +
+                                context.raw.toLocaleString(
+                                    "en-US",
+                                    {
+                                        minimumFractionDigits:2
+                                    }
+                                );
+
+                        }
+                    }
+                }
+            },
+
+            scales:{
+                y:{
+                    beginAtZero:true,
+
+                    ticks:{
+                        callback:function(value){
+
+                            return "$" +
+                                value.toLocaleString();
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+);      
 
     const payChart=new Chart(
     document.getElementById("payChart"),
@@ -2693,6 +2918,18 @@ function setQuickFilter(type){
 }
 window.setQuickFilter=setQuickFilter;
 
+function formatCurrency(value){
+
+    return value.toLocaleString(
+        "es-MX",
+        {
+            style:"currency",
+            currency:"MXN"
+        }
+    );
+
+}    
+
 function formatDate(date){
 
     const year=date.getFullYear();
@@ -2772,18 +3009,22 @@ if(endDate){
 
 }
 
-function renderDynamicKpis(total,incidentTotals){
+function renderDynamicKpis(
+    total,
+    incidentTotals,
+    costTotal,
+    topIncidentName,
+    topCostWarehouseName
+){
 
-    const container=
+    const container =
         document.getElementById("dynamicKpis");
 
     container.innerHTML="";
 
     container.innerHTML += `
 
-        <div class="kpi
-            ${activeIncident===null?"active":""}"
-
+        <div class="kpi active"
             onclick="selectIncident(null)">
 
             <h3>Total Programado</h3>
@@ -2794,37 +3035,187 @@ function renderDynamicKpis(total,incidentTotals){
 
         </div>
 
+        <div class="kpi">
+
+            <h3>Costo Total de Incidencias</h3>
+
+            <div class="kpi-number">
+                ${formatCurrency(costTotal)}
+            </div>
+
+        </div>
+
+        <div class="kpi"
+            onclick="selectIncident('${topIncidentName || ""}')">
+
+            <h3>Incidencia más recurrente</h3>
+
+            <div class="kpi-number"
+                style="font-size:24px;">
+                ${topIncidentName || "-"}
+            </div>
+
+        </div>
+
+        <div class="kpi">
+
+            <h3>Nave con más incidencias</h3>
+
+            <div class="kpi-number"
+                style="font-size:24px;">
+                ${topCostWarehouseName || "-"}
+            </div>
+
+        </div>
+
     `;
-
-    Object.entries(incidentTotals)
-
-        .filter(([k,v])=>v>0)
-
-        .sort((a,b)=>b[1]-a[1])
-
-        .forEach(item=>{
-
-            container.innerHTML += `
-
-                <div class="kpi
-                    ${activeIncident===item[0]?"active":""}"
-
-                    onclick="selectIncident('${item[0]}')">
-
-                    <h3>${item[0]}</h3>
-
-                    <div class="kpi-number">
-                        ${item[1]}
-                    </div>
-
-                </div>
-
-            `;
-
-        });
 
 }
 
+function updateInsights(
+    absenceByWarehouse,
+    incidentTotals,
+    trendTotals,
+    warehouseCostTotals,
+    warehouseIncidentTotals
+){
+
+    const topAbsence =
+        Object.entries(absenceByWarehouse)
+            .sort((a,b)=>b[1]-a[1])[0];
+
+    const topIncident =
+        Object.entries(incidentTotals)
+            .filter(([name,value])=>
+                operationalIncidents.includes(name) &&
+                value>0
+            )
+            .sort((a,b)=>b[1]-a[1])[0];
+
+    const topDay =
+        Object.entries(trendTotals)
+            .sort((a,b)=>b[1]-a[1])[0];
+
+    const topIncidentWarehouse =
+    Object.entries(warehouseIncidentTotals)
+        .sort((a,b)=>b[1]-a[1])[0];
+
+    const topCritical =
+        Object.entries(incidentTotals)
+            .filter(([name,value])=>
+                operationalIncidents.includes(name) &&
+                value>0
+            )
+            .sort((a,b)=>b[1]-a[1])
+            .slice(0,3)
+            .map(([name,value])=>`${name}: ${value}`)
+            .join("<br>");
+
+    document.getElementById("topAbsenceWarehouse").innerHTML =
+        topAbsence && topAbsence[1]>0
+            ? `${topAbsence[0]}: ${topAbsence[1]}`
+            : "-";
+
+    document.getElementById("topIncident").innerHTML =
+        topIncident
+            ? `${topIncident[0]}: ${topIncident[1]}`
+            : "-";
+
+    document.getElementById("topDay").innerHTML =
+        topDay
+            ? `${topDay[0]}: ${topDay[1]}`
+            : "-";
+
+    document.getElementById("topCostWarehouse").innerHTML =
+    topIncidentWarehouse && topIncidentWarehouse[1]>0
+        ? `${topIncidentWarehouse[0]}: ${topIncidentWarehouse[1]}`
+        : "-";
+    document.getElementById("topCriticalIncidents").innerHTML =
+        topCritical || "-";
+
+}
+
+function getMatrixClass(value){
+
+    if(value===0){
+        return "matrix-zero";
+    }
+
+    if(value<=3){
+        return "matrix-low";
+    }
+
+    if(value<=8){
+        return "matrix-mid";
+    }
+
+    return "matrix-high";
+
+}
+
+function renderMatrix(matrixTotals){
+
+    const head =
+        document.getElementById("matrixHead");
+
+    const body =
+        document.getElementById("matrixBody");
+
+    let headHtml = `
+        <tr>
+            <th>Nave</th>
+            ${operationalIncidents.map(i=>`<th>${i}</th>`).join("")}
+        </tr>
+    `;
+
+    let bodyHtml = "";
+
+    warehouses.forEach(w=>{
+
+        const rowTotal =
+            operationalIncidents.reduce((acc,i)=>{
+                return acc + (matrixTotals[w][i] || 0);
+            },0);
+
+        if(rowTotal===0){
+            return;
+        }
+
+        bodyHtml += `
+            <tr>
+                <td>${w}</td>
+
+                ${operationalIncidents.map(i=>{
+
+                    const value =
+                        matrixTotals[w][i] || 0;
+
+                    return `
+                        <td
+                            class="matrix-cell ${getMatrixClass(value)}"
+                            title="${w} / ${i}: ${value}"
+                        >
+                            ${value>0 ? value : "-"}
+                        </td>
+                    `;
+
+                }).join("")}
+            </tr>
+        `;
+
+    });
+
+    head.innerHTML = headHtml;
+    body.innerHTML = bodyHtml || `
+        <tr>
+            <td colspan="${operationalIncidents.length+1}">
+                Sin incidencias operativas en el periodo seleccionado
+            </td>
+        </tr>
+    `;
+
+}
+    
 function selectIncident(name){
 
     activeIncident=name;
@@ -2850,6 +3241,22 @@ function updateDashboard(data){
 
     const warehouseTotals={};
 
+    const matrixTotals={};
+
+warehouses.forEach(w=>{
+    matrixTotals[w]={};
+
+    operationalIncidents.forEach(i=>{
+        matrixTotals[w][i]=0;
+    });
+});
+
+    const warehouseCosts={};
+
+warehouses.forEach(w=>{
+    warehouseCosts[w]=0;
+});
+
     warehouses.forEach(w=>{
         warehouseTotals[w]=0;
     });
@@ -2857,7 +3264,16 @@ function updateDashboard(data){
     let paidTotal=0;
 let unpaidTotal=0;
 
+let costTotal=0;
+
 const trendTotals={};
+const absenceByWarehouse={};
+const warehouseCostTotals={};
+
+warehouses.forEach(w=>{
+    absenceByWarehouse[w]=0;
+    warehouseCostTotals[w]=0;
+});
 
     const history=
         document.getElementById("historyTable");
@@ -2868,14 +3284,45 @@ const trendTotals={};
 
         let reportTotal=0;
 
+        let reportIncidentTotal=0;
+
         r.positions.forEach(p=>{
 
-            incidents.forEach(i=>{
+    const positionCost =
+        positionCosts[p.position] || 0;
+
+    incidents.forEach(i=>{
 
                 const value=
     p.incidents[i] || 0;
 
+        if(operationalIncidents.includes(i)){
+    reportIncidentTotal+=value;
+}
+
 incidentTotals[i]+=value;
+
+if(
+    operationalIncidents.includes(i) &&
+    matrixTotals[r.warehouse]
+){
+    matrixTotals[r.warehouse][i]+=value;
+}
+
+if(operationalIncidents.includes(i)){
+
+    const calculatedCost =
+        value * positionCost;
+
+    costTotal += calculatedCost;
+
+    warehouseCostTotals[r.warehouse] += calculatedCost;
+
+}
+
+if(i==="Ausentismo"){
+    absenceByWarehouse[r.warehouse] += value;
+}        
 
 /* PAGADOS */
 
@@ -2906,8 +3353,24 @@ if(
 
         });
 
-        warehouseTotals[r.warehouse]+=reportTotal;
+        warehouseTotals[r.warehouse]+=reportIncidentTotal;
 
+r.positions.forEach(position=>{
+
+    const positionCost =
+        positionCosts[position.position] || 0;
+
+    operationalIncidents.forEach(incident=>{
+
+        const qty =
+            position.incidents[incident] || 0;
+
+        warehouseCosts[r.warehouse]+=
+            qty * positionCost;
+
+    });
+
+});
 total+=reportTotal;
 
 /* TENDENCIA */
@@ -2916,7 +3379,7 @@ if(!trendTotals[r.scheduledDate]){
     trendTotals[r.scheduledDate]=0;
 }
 
-trendTotals[r.scheduledDate]+=reportTotal;
+trendTotals[r.scheduledDate]+=reportIncidentTotal;
 
         history.innerHTML += `
 
@@ -3024,29 +3487,67 @@ ${
 
     });
 
-    renderDynamicKpis(
-        total,
-        incidentTotals
-    );
+    const topIncidentEntry =
+    Object.entries(incidentTotals)
+        .filter(([name,value])=>
+            operationalIncidents.includes(name) &&
+            value>0
+        )
+        .sort((a,b)=>b[1]-a[1])[0];
 
-    lineChart.data.datasets[0].data=
+const warehouseIncidentTotals = {};
 
-        incidents.map(i=>{
+warehouses.forEach(w=>{
+    warehouseIncidentTotals[w]=0;
+});
 
-            if(activeIncident && activeIncident!==i){
-                return 0;
-            }
+filtered.forEach(r=>{
 
-            return incidentTotals[i];
+    (r.positions || []).forEach(p=>{
+
+        operationalIncidents.forEach(i=>{
+
+            warehouseIncidentTotals[r.warehouse] +=
+                p.incidents[i] || 0;
 
         });
 
-    lineChart.update();
+    });
 
+});
+
+const topIncidentWarehouseEntry =
+    Object.entries(warehouseIncidentTotals)
+        .sort((a,b)=>b[1]-a[1])[0];
+
+renderDynamicKpis(
+    total,
+    incidentTotals,
+    costTotal,
+    topIncidentEntry ? topIncidentEntry[0] : "-",
+    topIncidentWarehouseEntry && topIncidentWarehouseEntry[1]>0
+    ? topIncidentWarehouseEntry[0]
+    : "-"
+);
+
+updateInsights(
+    absenceByWarehouse,
+    incidentTotals,
+    trendTotals,
+    warehouseCostTotals,
+    warehouseIncidentTotals
+);
+    
+    renderMatrix(matrixTotals);
     barChart.data.datasets[0].data=
         warehouses.map(w=>warehouseTotals[w]);
 
     barChart.update();
+
+    costChart.data.datasets[0].data =
+    warehouses.map(w=>warehouseCosts[w]);
+
+costChart.update();
 
     /* PAY */
 
@@ -3500,7 +4001,10 @@ function exportToExcel(){
 
         r.positions.forEach(p=>{
 
-            incidents.forEach(i=>{
+    const positionCost =
+        positionCosts[p.position] || 0;
+
+    incidents.forEach(i=>{
 
                 const qty=
                     p.incidents[i] || 0;
