@@ -288,6 +288,9 @@ header h1{
     background:white;
     padding:15px;
     border-radius:15px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
 }
 
 .counter{
@@ -589,6 +592,34 @@ header h1{
         min-height:auto;
     }
 
+        .incidents-grid{
+        grid-template-columns:1fr;
+        gap:10px;
+    }
+
+    .incident-card{
+        flex-direction:row;
+        justify-content:space-between;
+        align-items:center;
+        padding:12px 14px;
+        min-height:64px;
+    }
+
+    .incident-card > div:first-child{
+        font-size:16px;
+        font-weight:bold;
+    }
+
+    .counter{
+        margin-top:0;
+        justify-content:flex-end;
+    }
+
+    .incident-input{
+        max-width:90px;
+        font-size:22px;
+        padding:8px;
+    }
 }
 
 </style>
