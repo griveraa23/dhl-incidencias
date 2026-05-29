@@ -280,22 +280,47 @@ header h1{
 
 .incidents-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:12px;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:10px;
 }
 
 .incident-card{
     background:white;
-    padding:12px 14px;
-    border-radius:16px;
+    padding:10px;
+    border-radius:14px;
     display:flex;
     flex-direction:row;
     justify-content:space-between;
     align-items:center;
-    gap:12px;
-    min-height:72px;
+    gap:10px;
+    min-height:58px;
     border:2px solid #f0f0f0;
     box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+
+.incident-left{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+}
+
+.incident-icon{
+    width:34px;
+    height:34px;
+    min-width:34px;
+    border-radius:12px;
+    background:#f3f3f3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:17px;
+}
+
+.incident-name{
+    font-size:13px;
+    font-weight:bold;
+    line-height:1.2;
 }
 
 .incident-card.has-value{
@@ -303,9 +328,13 @@ header h1{
     background:#fff5f5;
 }
 
+.incident-card.has-value .incident-icon{
+    background:#ffe1e1;
+    color:#D40511;
+}
+
 .incident-card.has-value .incident-name{
     color:#D40511;
-    font-weight:bold;
 }
 
 .incident-card.has-value .incident-input{
@@ -313,7 +342,6 @@ header h1{
     color:#D40511;
     background:white;
 }
-
 .counter{
     display:flex;
     justify-content:center;
@@ -346,12 +374,12 @@ header h1{
 }
 
 .incident-input{
-    width:78px;
-    padding:8px;
-    border-radius:12px;
+    width:58px;
+    padding:6px;
+    border-radius:10px;
     border:2px solid #ddd;
     text-align:center;
-    font-size:22px;
+    font-size:18px;
     font-weight:bold;
 }
 
@@ -618,17 +646,23 @@ header h1{
     }
 
     .incident-card{
-        flex-direction:row;
-        justify-content:space-between;
-        align-items:center;
-        padding:12px 14px;
-        min-height:64px;
-    }
+    flex-direction:row;
+    justify-content:space-between;
+    align-items:center;
+    padding:9px;
+    min-height:54px;
+}
 
-    .incident-card > div:first-child{
-        font-size:16px;
-        font-weight:bold;
-    }
+.incident-name{
+    font-size:12px;
+}
+
+.incident-icon{
+    width:30px;
+    height:30px;
+    min-width:30px;
+    font-size:15px;
+}
 
     .counter{
         margin-top:0;
@@ -1648,6 +1682,25 @@ const operationalIncidents = incidents.filter(i=>
     i!=="Producción"
 );
 
+const incidentIcons = {
+    "Vacante":"👤",
+    "Capacitación":"🎓",
+    "Ausentismo":"👥",
+    "Incapacidad":"🩺",
+    "Castigo":"🔨",
+    "Permiso sin goce":"📄",
+    "Permiso con goce":"✅",
+    "Vacaciones":"🏖️",
+    "Producción":"🏭",
+    "Llenado de proceso":"📦",
+    "Llenado de proceso (PAGADO)":"📦",
+    "Actividades especiales VW":"🚙",
+    "Atraso ruta transporte":"🚚",
+    "Actividades especiales DHL":"📦",
+    "Talleres / Cursos":"📘",
+    "Sindicato":"👥"
+};    
+
 let selectedWarehouse="";
 let selectedShift="";
 let reports=[];
@@ -2133,11 +2186,19 @@ function renderPositions(){
 
             incidentsHTML += `
 
-                <div class="incident-card ${block.incidents[type]>0 ? "has-value" : ""}">
+               <div class="incident-card ${block.incidents[type]>0 ? "has-value" : ""}">
 
-    <div class="incident-name">${type}</div>
+    <div class="incident-left">
 
-                    <div class="counter">
+        <div class="incident-icon">
+            ${incidentIcons[type] || "📌"}
+        </div>
+
+        <div class="incident-name">${type}</div>
+
+    </div>
+
+    <div class="counter">
 
     <input
         type="number"
