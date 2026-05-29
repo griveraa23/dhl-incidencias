@@ -280,17 +280,38 @@ header h1{
 
 .incidents-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:15px;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:12px;
 }
 
 .incident-card{
     background:white;
-    padding:15px;
-    border-radius:15px;
+    padding:12px 14px;
+    border-radius:16px;
     display:flex;
-    flex-direction:column;
-    gap:10px;
+    flex-direction:row;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    min-height:72px;
+    border:2px solid #f0f0f0;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+
+.incident-card.has-value{
+    border-color:#ff9b9b;
+    background:#fff5f5;
+}
+
+.incident-card.has-value .incident-name{
+    color:#D40511;
+    font-weight:bold;
+}
+
+.incident-card.has-value .incident-input{
+    border-color:#D40511;
+    color:#D40511;
+    background:white;
 }
 
 .counter{
@@ -325,15 +346,14 @@ header h1{
 }
 
 .incident-input{
-    width:100%;
-    max-width:110px;
-    padding:10px;
+    width:78px;
+    padding:8px;
     border-radius:12px;
     border:2px solid #ddd;
     text-align:center;
-    font-size:24px;
+    font-size:22px;
     font-weight:bold;
-}    
+}
 
 .add-position-btn{
     padding:14px 20px;
@@ -2113,9 +2133,9 @@ function renderPositions(){
 
             incidentsHTML += `
 
-                <div class="incident-card">
+                <div class="incident-card ${block.incidents[type]>0 ? "has-value" : ""}">
 
-                    <div>${type}</div>
+    <div class="incident-name">${type}</div>
 
                     <div class="counter">
 
