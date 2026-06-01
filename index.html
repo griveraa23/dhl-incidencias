@@ -600,6 +600,77 @@ header h1{
     display:none;
 }
 
+.app-modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.55);
+    z-index:999999;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.app-modal-card{
+    background:white;
+    width:100%;
+    max-width:420px;
+    border-radius:24px;
+    padding:28px;
+    text-align:center;
+    box-shadow:0 12px 35px rgba(0,0,0,.25);
+}
+
+.app-modal-icon{
+    width:64px;
+    height:64px;
+    margin:0 auto 15px;
+    border-radius:50%;
+    background:#fff0cc;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:32px;
+}
+
+.app-modal-card h2{
+    color:#D40511;
+    margin-bottom:10px;
+}
+
+.app-modal-card p{
+    color:#555;
+    font-size:16px;
+    line-height:1.4;
+}
+
+.app-modal-actions{
+    display:flex;
+    gap:12px;
+    margin-top:24px;
+}
+
+.modal-cancel-btn,
+.modal-delete-btn{
+    flex:1;
+    border:none;
+    border-radius:14px;
+    padding:14px;
+    font-weight:bold;
+    cursor:pointer;
+    font-size:15px;
+}
+
+.modal-cancel-btn{
+    background:#eee;
+    color:#333;
+}
+
+.modal-delete-btn{
+    background:#D40511;
+    color:white;
+}    
+
 @media(max-width:900px){
 
     .report-layout{
@@ -1313,6 +1384,30 @@ header h1{
     Programación guardada correctamente
 </div>
 
+<div id="deleteModal" class="app-modal">
+    <div class="app-modal-card">
+
+        <div class="app-modal-icon">⚠️</div>
+
+        <h2>Confirmar eliminación</h2>
+
+        <p>
+            ¿Deseas eliminar esta programación?
+        </p>
+
+        <div class="app-modal-actions">
+            <button class="modal-cancel-btn" onclick="closeDeleteModal()">
+                Cancelar
+            </button>
+
+            <button class="modal-delete-btn" onclick="confirmDeleteReport()">
+                Eliminar
+            </button>
+        </div>
+
+    </div>
+</div>    
+
     <!-- MODAL DETALLE -->
 
 <div id="detailModal"
@@ -1706,6 +1801,7 @@ let selectedShift="";
 let reports=[];
 let activeIncident=null;
 let editingReportId=null;
+let pendingDeleteReportId=null;    
 
 const positionsData=[];    
     
@@ -4156,41 +4252,57 @@ function exportToExcel(){
 
 window.exportToExcel=exportToExcel;
 
-async function deleteReport(reportId){
+function deleteReport(reportId){
 
-    try{
+    pendingDeleteReportId=reportId;
 
-        const confirmDelete=
-            confirm(
-                "¿Eliminar programación?"
-            );
-
-        if(!confirmDelete){
-            return;
-        }
-
-        await deleteDoc(
-            doc(db,"reports",reportId)
-        );
-
-        alert(
-            "Programación eliminada"
-        );
-
-    }catch(error){
-
-        console.error(error);
-
-        alert(
-            "Error al eliminar"
-        );
-
-    }
+    document
+        .getElementById("deleteModal")
+        .style.display="flex";
 
 }
 
 window.deleteReport=deleteReport;
 
+function closeDeleteModal(){
+
+    pendingDeleteReportId=null;
+
+    document
+        .getElementById("deleteModal")
+        .style.display="none";
+
+}
+
+window.closeDeleteModal=closeDeleteModal;
+
+async function confirmDeleteReport(){
+
+    if(!pendingDeleteReportId){
+        return;
+    }
+
+    try{
+
+        await deleteDoc(
+            doc(db,"reports",pendingDeleteReportId)
+        );
+
+        closeDeleteModal();
+
+        showToast();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Error al eliminar");
+
+    }
+
+}
+
+window.confirmDeleteReport=confirmDeleteReport;
 function editReport(reportId){
 
     const report=
